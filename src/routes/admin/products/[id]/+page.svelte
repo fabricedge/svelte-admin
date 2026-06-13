@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getProduct, updateProduct } from '$lib/api/products'
+  import { getProduct, updateProduct, listCategories } from '$lib/api/products'
   import { page } from '$app/state'
   import { toast } from 'svelte-sonner'
+  import ImageGallery from '$lib/components/ImageGallery.svelte'
 
-  let id = $derived(page.params.id)
+  let id = $derived(page.params.id!)
 
   let name = $state('')
   let slug = $state('')
@@ -12,20 +13,25 @@
   let price = $state(0)
   let category = $state('')
   let inventory = $state(0)
-  let images = $state('')
+  let images: string[] = $state([])
+  let categories: string[] = $state([])
   let loading = $state(false)
   let loaded = $state(false)
 
   onMount(async () => {
     try {
-      const data = await getProduct(id)
-      name = data.name
-      slug = data.slug
-      description = data.description || ''
-      price = data.price / 100
-      category = data.category || ''
-      inventory = data.inventory
-      images = (data.images || []).join('\n')
+      const [productData, categoriesData] = await Promise.all([
+        getProduct(id),
+        listCategories().catch(() => ({ categories: [] })),
+      ])
+      name = productData.name
+      slug = productData.slug
+      description = productData.description || ''
+      price = productData.price / 100
+      category = productData.category || ''
+      inventory = productData.inventory
+      images = productData.images || []
+      categories = categoriesData.categories || []
       loaded = true
     } catch {
       toast.error('Produto não encontrado')
@@ -37,10 +43,13 @@
     loading = true
     try {
       await updateProduct(id, {
-        name, slug, description,
-        price: Math.round(price * 100),
-        category, inventory,
-        images: images ? images.split('\n').filter(Boolean) : []
+        name,
+        slug,
+        description,
+        price,
+        category: category || null,
+        inventory,
+        images,
       })
       toast.success('Produto atualizado')
     } catch (err: any) {
@@ -52,38 +61,54 @@
 <h1 class="text-2xl font-bold mb-6">Editar Produto</h1>
 
 {#if !loaded}
-  <p class="text-gray-500">Carregando...</p>
+  <div class="space-y-4">
+    <div class="h-8 bg-gray-100 rounded animate-pulse w-48"></div>
+    <div class="h-64 bg-gray-100 rounded-lg animate-pulse"></div>
+  </div>
 {:else}
-  <form onsubmit={handleSubmit} class="max-w-lg space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-      <input type="text" bind:value={name} required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+  <form onsubmit={handleSubmit} class="max-w-2xl space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+        <input type="text" bind:value={name} required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+        <input type="text" bind:value={slug} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
+        <input type="number" bind:value={price} min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+        <div class="flex gap-2">
+          <select bind:value={category} class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
+            <option value="">Sem categoria</option>
+            {#each categories as cat}
+              <option value={cat}>{cat}</option>
+            {/each}
+          </select>
+          <a href="/admin/categories" class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50">+</a>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Estoque</label>
+        <input type="number" bind:value={inventory} min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      </div>
     </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-      <input type="text" bind:value={slug} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-    </div>
+
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-      <textarea bind:value={description} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" rows="3"></textarea>
+      <textarea bind:value={description} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" rows="4"></textarea>
     </div>
+
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Preço (em dólares)</label>
-      <input type="number" bind:value={price} min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      <label class="block text-sm font-medium text-gray-700 mb-1">Imagens</label>
+      <ImageGallery bind:images />
     </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-      <input type="text" bind:value={category} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Estoque</label>
-      <input type="number" bind:value={inventory} min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Imagens (uma URL por linha)</label>
-      <textarea bind:value={images} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" rows="3"></textarea>
-    </div>
-    <button type="submit" disabled={loading} class="px-4 py-2 bg-black text-white rounded-md text-sm disabled:opacity-50">
+
+    <button type="submit" disabled={loading} class="px-6 py-2.5 bg-black text-white rounded-md text-sm disabled:opacity-50">
       {loading ? 'Salvando...' : 'Salvar'}
     </button>
   </form>
