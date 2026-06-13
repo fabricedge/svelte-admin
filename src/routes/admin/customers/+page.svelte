@@ -9,7 +9,7 @@
     try {
       const data = await get('/users')
       customers = data.users || []
-    } catch {} finally { loading = false }
+    } catch (err) { console.error('Erro ao carregar clientes:', err) } finally { loading = false }
   })
 </script>
 

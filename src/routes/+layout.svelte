@@ -9,33 +9,30 @@
   let user = $state<{ email?: string; role?: string } | null>(null)
 
   $effect(() => {
+    let currentUser: { email?: string; role?: string } | null = null
     try {
       const token = localStorage.getItem('token')
       if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        user = payload
-      } else {
-        user = null
+        currentUser = JSON.parse(atob(token.split('.')[1]))
       }
-    } catch { user = null }
-  })
+    } catch {}
 
-  let isAuth = $derived(!!user)
-  let isLoginPage = $derived(page.url.pathname === '/login')
+    user = currentUser
+
+    if (!currentUser && page.url.pathname !== '/login') {
+      window.location.href = '/login'
+    }
+  })
 
   function handleLogout() {
     logout()
-    window.location.href = '/login'
-  }
-
-  if (!isAuth && !isLoginPage) {
     window.location.href = '/login'
   }
 </script>
 
 <Toaster />
 
-{#if isAuth && !isLoginPage}
+{#if user && page.url.pathname !== '/login'}
   <div class="flex min-h-screen">
     <aside class="w-60 border-r border-gray-200 bg-white shrink-0 flex flex-col">
       <a href="/admin" class="h-16 flex items-center px-6 font-bold text-lg border-b border-gray-200">Admin</a>

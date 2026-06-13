@@ -9,7 +9,7 @@
     try {
       const data = await listOrders()
       orders = data.orders || []
-    } catch {} finally { loading = false }
+    } catch (err) { console.error('Erro ao carregar pedidos:', err) } finally { loading = false }
   })
 
   function formatPrice(cents: number) {

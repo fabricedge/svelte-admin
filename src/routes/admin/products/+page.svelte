@@ -10,7 +10,7 @@
     try {
       const data = await listProducts()
       products = data.products || []
-    } catch {} finally { loading = false }
+    } catch (err) { console.error('Erro ao carregar produtos:', err) } finally { loading = false }
   })
 
   async function handleDelete(id: string) {

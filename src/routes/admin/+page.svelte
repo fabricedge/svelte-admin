@@ -22,7 +22,9 @@
         totalProducts: productsData.count || 0,
         totalCustomers: 0
       }
-    } catch {} finally {
+    } catch (err) {
+      console.error('Erro ao carregar dashboard:', err)
+    } finally {
       loading = false
     }
   })
