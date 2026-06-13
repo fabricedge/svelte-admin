@@ -1,7 +1,8 @@
 import { get, post, put, del } from './index'
 
-export async function listProducts() {
-  return get('/products')
+export async function listProducts(params?: Record<string, string>) {
+  const qs = params ? '?' + new URLSearchParams(params).toString() : ''
+  return get(`/products${qs}`)
 }
 
 export async function getProduct(id: string) {
@@ -18,4 +19,25 @@ export async function updateProduct(id: string, data: any) {
 
 export async function deleteProduct(id: string) {
   return del(`/products/${id}`)
+}
+
+export async function duplicateProduct(id: string) {
+  const product = await getProduct(id)
+  const { name, description, price, images, category, inventory } = product
+  return createProduct({
+    name: `${name} (cópia)`,
+    description,
+    price: price / 100,
+    images,
+    category,
+    inventory,
+  })
+}
+
+export async function listCategories() {
+  return get('/products/categories')
+}
+
+export async function deleteCategory(name: string) {
+  return del(`/products/category/${encodeURIComponent(name)}`)
 }

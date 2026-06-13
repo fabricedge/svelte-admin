@@ -1,4 +1,4 @@
-import { get, put } from './index'
+import { get, put, post } from './index'
 
 export async function listOrders(params?: Record<string, string>) {
   const qs = params ? '?' + new URLSearchParams(params).toString() : ''
@@ -11,4 +11,8 @@ export async function getOrder(id: string) {
 
 export async function updateOrderStatus(id: string, status: string) {
   return put(`/orders/${id}/status`, { status })
+}
+
+export async function bulkUpdateOrderStatus(ids: string[], status: string) {
+  return post('/orders/bulk-status', { ids, status })
 }
