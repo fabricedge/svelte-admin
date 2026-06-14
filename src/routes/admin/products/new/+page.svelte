@@ -35,7 +35,7 @@
         name,
         slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
         description,
-        price: Math.round(price * 100),
+        price,
         category: category || null,
         inventory,
         images,

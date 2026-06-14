@@ -2,16 +2,17 @@
   import { onMount } from 'svelte'
   import { getSettings, updateSettings } from '$lib/api/settings'
   import { toast } from 'svelte-sonner'
+  import { t } from '$lib/i18n/locale.svelte'
 
   let settings: Record<string, string> = $state({})
   let loading = $state(true)
   let saving = $state(false)
 
   const defaultSettings = [
-    { key: 'store_name', label: 'Nome da loja', type: 'text' },
-    { key: 'store_email', label: 'Email da loja', type: 'email' },
-    { key: 'store_currency', label: 'Moeda', type: 'text' },
-    { key: 'store_locale', label: 'Locale', type: 'text' },
+    { key: 'store_name', label: () => t('settings.fieldLabels.store_name'), type: 'text' },
+    { key: 'store_email', label: () => t('settings.fieldLabels.store_email'), type: 'email' },
+    { key: 'store_currency', label: () => t('settings.fieldLabels.store_currency'), type: 'text' },
+    { key: 'store_locale', label: () => t('settings.fieldLabels.store_locale'), type: 'text' },
   ]
 
   onMount(async () => {
@@ -33,7 +34,7 @@
     saving = true
     try {
       await updateSettings(settings)
-      toast.success('Configurações salvas')
+      toast.success(t('settings.saved'))
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -42,7 +43,7 @@
   }
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Configurações</h1>
+<h1 class="text-2xl font-bold mb-6">{t('settings.title')}</h1>
 
 {#if loading}
   <div class="space-y-3 max-w-lg">
@@ -54,7 +55,7 @@
   <form onsubmit={handleSubmit} class="max-w-lg space-y-5">
     {#each defaultSettings as field}
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{field.label()}</label>
         <input
           type={field.type}
           value={getValue(field.key)}
@@ -65,7 +66,7 @@
     {/each}
 
     <button type="submit" disabled={saving} class="px-6 py-2.5 bg-black text-white rounded-md text-sm disabled:opacity-50">
-      {saving ? 'Salvando...' : 'Salvar configurações'}
+      {saving ? t('common.saving') : t('common.save')}
     </button>
   </form>
 {/if}

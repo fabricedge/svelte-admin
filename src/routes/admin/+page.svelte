@@ -3,6 +3,7 @@
   import { getStats } from '$lib/api/stats'
   import { listOrders } from '$lib/api/orders'
   import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from 'chart.js'
+  import { t, getLocale } from '$lib/i18n/locale.svelte'
 
   Chart.register(DoughnutController, ArcElement, Tooltip, Legend)
 
@@ -12,19 +13,15 @@
   let chartCanvas: HTMLCanvasElement | undefined = $state()
   let chart: Chart | null = null
 
+  const localeMap: Record<string, string> = { pt: 'pt-BR', en: 'en-US', es: 'es-ES' }
+
   function formatPrice(cents: number) {
-    return `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+    const locale = localeMap[getLocale()] || 'pt-BR'
+    return `R$ ${(cents / 100).toLocaleString(locale, { minimumFractionDigits: 2 })}`
   }
 
   function statusLabel(status: string) {
-    const labels: Record<string, string> = {
-      PENDING: 'Pendente',
-      PAID: 'Pago',
-      SHIPPED: 'Enviado',
-      DELIVERED: 'Entregue',
-      CANCELLED: 'Cancelado',
-    }
-    return labels[status] || status
+    return t(`dashboard.status.${status}`) || status
   }
 
   function statusClass(status: string) {
@@ -93,7 +90,7 @@
   })
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+<h1 class="text-2xl font-bold mb-6">{t('dashboard.title')}</h1>
 
 {#if loading}
   <div class="space-y-4">
@@ -109,57 +106,57 @@
 {:else if stats}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500">Receita total</p>
+      <p class="text-sm text-gray-500">{t('dashboard.revenue')}</p>
       <p class="text-2xl font-bold mt-1">{formatPrice(stats.revenue.total)}</p>
     </div>
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500">Pedidos</p>
+      <p class="text-sm text-gray-500">{t('dashboard.orders')}</p>
       <p class="text-2xl font-bold mt-1">{stats.totalOrders}</p>
     </div>
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500">Produtos</p>
+      <p class="text-sm text-gray-500">{t('dashboard.products')}</p>
       <p class="text-2xl font-bold mt-1">{stats.totalProducts}</p>
     </div>
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500">Clientes</p>
+      <p class="text-sm text-gray-500">{t('dashboard.customers')}</p>
       <p class="text-2xl font-bold mt-1">{stats.totalCustomers}</p>
     </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500 mb-1">Receita hoje</p>
+      <p class="text-sm text-gray-500 mb-1">{t('dashboard.revenueToday')}</p>
       <p class="text-xl font-bold">{formatPrice(stats.revenue.today)}</p>
     </div>
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500 mb-1">Receita esta semana</p>
+      <p class="text-sm text-gray-500 mb-1">{t('dashboard.revenueWeek')}</p>
       <p class="text-xl font-bold">{formatPrice(stats.revenue.week)}</p>
     </div>
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <p class="text-sm text-gray-500 mb-1">Receita este mês</p>
+      <p class="text-sm text-gray-500 mb-1">{t('dashboard.revenueMonth')}</p>
       <p class="text-xl font-bold">{formatPrice(stats.revenue.month)}</p>
     </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <h2 class="font-bold mb-4">Pedidos por status</h2>
+      <h2 class="font-bold mb-4">{t('dashboard.ordersByStatus')}</h2>
       <div class="max-w-xs mx-auto">
         <canvas bind:this={chartCanvas}></canvas>
       </div>
     </div>
 
     <div class="bg-white p-6 rounded-lg border border-gray-200">
-      <h2 class="font-bold mb-4">Pedidos recentes</h2>
+      <h2 class="font-bold mb-4">{t('dashboard.recentOrders')}</h2>
       {#if recentOrders.length === 0}
-        <p class="text-sm text-gray-500">Nenhum pedido recente.</p>
+        <p class="text-sm text-gray-500">{t('dashboard.noOrders')}</p>
       {:else}
         <div class="space-y-3">
           {#each recentOrders as order}
             <a href="/admin/orders/{order.id}" class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 -mx-2 px-2 rounded">
               <div>
                 <p class="text-sm font-medium">#{order.id.slice(0, 8)}</p>
-                <p class="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+                <p class="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString(localeMap[getLocale()] || 'pt-BR')}</p>
               </div>
               <div class="text-right">
                 <p class="text-sm font-medium">{formatPrice(order.total)}</p>

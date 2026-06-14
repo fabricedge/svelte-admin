@@ -4,6 +4,8 @@
   import { Toaster } from 'svelte-sonner'
   import { StoreContext, setStoreContext } from '$lib/stores/store-context.svelte'
   import StoreSelector from '$lib/components/StoreSelector.svelte'
+  import { t, getLocale } from '$lib/i18n/locale.svelte'
+  import LanguageSwitcher from '$lib/i18n/LanguageSwitcher.svelte'
 
   let { children } = $props()
 
@@ -56,10 +58,10 @@
   }
 
   const navItems = [
-    { label: 'Dashboard', href: '/superadmin', icon: '📊' },
-    { label: 'Lojas', href: '/superadmin/stores', icon: '🏪' },
-    { label: 'Usuários', href: '/superadmin/users', icon: '👥' },
-    { label: 'Configurações', href: '/superadmin/settings', icon: '⚙️' },
+    { label: () => t('superadmin.dashboard'), href: '/superadmin', icon: '📊' },
+    { label: () => t('superadmin.stores'), href: '/superadmin/stores', icon: '🏪' },
+    { label: () => t('superadmin.users'), href: '/superadmin/users', icon: '👥' },
+    { label: () => t('superadmin.settings'), href: '/superadmin/settings', icon: '⚙️' },
   ]
 </script>
 
@@ -72,8 +74,8 @@
   >
     <div class="h-16 flex items-center px-6 font-bold text-lg border-b border-gray-200 dark:border-gray-800 shrink-0">
       <a href="/superadmin" class="flex items-center gap-2">
-        <span class="text-gray-900 dark:text-gray-100">Admin</span>
-        <span class="rounded bg-purple-100 dark:bg-purple-900 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:text-purple-300">SUPER ADMIN</span>
+        <span class="text-gray-900 dark:text-gray-100">{t('superadmin.brand')}</span>
+        <span class="rounded bg-purple-100 dark:bg-purple-900 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:text-purple-300">{t('superadmin.badge')}</span>
       </a>
     </div>
     <StoreSelector />
@@ -86,15 +88,15 @@
           class:font-medium={page.url.pathname === item.href}
         >
           <span>{item.icon}</span>
-          {item.label}
+          {item.label()}
         </a>
       {/each}
     </nav>
     <div class="p-4 border-t border-gray-200 dark:border-gray-800 shrink-0">
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{user?.email}</p>
       <div class="flex items-center gap-3">
-        <a href="/admin" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Admin padrão</a>
-        <button onclick={handleLogout} class="text-xs text-red-500 hover:underline">Sair</button>
+        <a href="/admin" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">{t('superadmin.regularAdmin')}</a>
+        <button onclick={handleLogout} class="text-xs text-red-500 hover:underline">{t('superadmin.signOut')}</button>
       </div>
     </div>
   </aside>
@@ -111,12 +113,13 @@
         </svg>
       </button>
       <p class="text-sm text-gray-500 dark:text-gray-400 flex-1">
-        Painel Superior — <span class="font-medium text-gray-900 dark:text-gray-100">{user?.email}</span>
+        {t('superadmin.headerTitle')} — <span class="font-medium text-gray-900 dark:text-gray-100">{user?.email}</span>
       </p>
+      <LanguageSwitcher />
       <button
         onclick={toggleDark}
         class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
-        title={darkMode ? 'Modo claro' : 'Modo escuro'}
+        title={darkMode ? t('common.lightMode') : t('common.darkMode')}
       >
         {#if darkMode}
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>

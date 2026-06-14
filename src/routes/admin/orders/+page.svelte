@@ -4,6 +4,7 @@
   import { toast } from 'svelte-sonner'
   import ConfirmModal from '$lib/components/ConfirmModal.svelte'
   import { exportCSV } from '$lib/utils/csv'
+  import { t, getLocale } from '$lib/i18n/locale.svelte'
 
   let orders = $state<any[]>([])
   let loading = $state(true)
@@ -16,6 +17,8 @@
   let debounceTimer: ReturnType<typeof setTimeout> | undefined
 
   let bulkAction = $state<{ status: string; label: string } | null>(null)
+
+  const localeMap: Record<string, string> = { pt: 'pt-BR', en: 'en-US', es: 'es-ES' }
 
   onMount(() => load())
 
@@ -80,13 +83,14 @@
   }
 
   function handleExportCSV() {
+    const locale = localeMap[getLocale()] || 'pt-BR'
     exportCSV('pedidos', ['ID', 'Cliente', 'Total', 'Status', 'Data'],
       orders.map((o) => [
         o.id,
         o.user?.email || '-',
         formatPrice(o.total),
         statusLabel(o.status),
-        new Date(o.createdAt).toLocaleDateString(),
+        new Date(o.createdAt).toLocaleDateString(locale),
       ])
     )
   }
@@ -96,10 +100,7 @@
   }
 
   function statusLabel(status: string) {
-    const labels: Record<string, string> = {
-      ALL: 'Todos', PENDING: 'Pendente', PAID: 'Pago', SHIPPED: 'Enviado', DELIVERED: 'Entregue', CANCELLED: 'Cancelado',
-    }
-    return labels[status] || status
+    return t(`orders.statusLabels.${status}`) || status
   }
 
   function statusClass(status: string) {
@@ -113,18 +114,18 @@
 <ConfirmModal
   open={bulkAction !== null}
   title="Ação em lote"
-  message="{bulkAction ? `Marcar ${selectedIds.size} pedido(s) como &quot;${bulkAction.label}&quot;?` : ''}"
-  confirmLabel={bulkAction?.label ?? 'Confirmar'}
+  message={bulkAction ? `Marcar ${selectedIds.size} pedido(s) como &quot;${bulkAction.label}&quot;?` : ''}
+  confirmLabel={bulkAction?.label ?? t('common.confirm')}
   onConfirm={confirmBulkAction}
   onCancel={() => { bulkAction = null }}
 />
 
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold">Pedidos</h1>
+  <h1 class="text-2xl font-bold">{t('orders.title')}</h1>
   <div class="flex items-center gap-3">
     <input
       type="text"
-      placeholder="Buscar por ID ou email..."
+      placeholder={t('orders.searchPlaceholder')}
       bind:value={search}
       oninput={onSearchInput}
       class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300 w-48 lg:w-64"
@@ -134,14 +135,14 @@
       onchange={onFilterChange}
       class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300"
     >
-      <option value="ALL">Todos</option>
-      <option value="PENDING">Pendente</option>
-      <option value="PAID">Pago</option>
-      <option value="SHIPPED">Enviado</option>
-      <option value="DELIVERED">Entregue</option>
-      <option value="CANCELLED">Cancelado</option>
+      <option value="ALL">{t('orders.statusAll')}</option>
+      <option value="PENDING">{t('orders.statusLabels.PENDING')}</option>
+      <option value="PAID">{t('orders.statusLabels.PAID')}</option>
+      <option value="SHIPPED">{t('orders.statusLabels.SHIPPED')}</option>
+      <option value="DELIVERED">{t('orders.statusLabels.DELIVERED')}</option>
+      <option value="CANCELLED">{t('orders.statusLabels.CANCELLED')}</option>
     </select>
-    <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">CSV</button>
+    <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">{t('orders.exportCSV')}</button>
   </div>
 </div>
 
@@ -149,16 +150,16 @@
   <div class="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
     <span class="text-sm text-gray-600 dark:text-gray-400">{selectedIds.size} selecionado(s)</span>
     {#if statusFilter === 'ALL' || statusFilter === 'PENDING'}
-      <button onclick={() => { bulkAction = { status: 'PAID', label: 'Pago' } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md disabled:opacity-50">Pago</button>
+      <button onclick={() => { bulkAction = { status: 'PAID', label: t('orders.bulk.pay') } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md disabled:opacity-50">{t('orders.bulk.pay')}</button>
     {/if}
     {#if statusFilter === 'ALL' || statusFilter === 'PAID'}
-      <button onclick={() => { bulkAction = { status: 'SHIPPED', label: 'Enviado' } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md disabled:opacity-50">Enviado</button>
+      <button onclick={() => { bulkAction = { status: 'SHIPPED', label: t('orders.bulk.ship') } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md disabled:opacity-50">{t('orders.bulk.ship')}</button>
     {/if}
     {#if statusFilter === 'ALL' || statusFilter === 'SHIPPED'}
-      <button onclick={() => { bulkAction = { status: 'DELIVERED', label: 'Entregue' } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-green-700 text-white rounded-md disabled:opacity-50">Entregue</button>
+      <button onclick={() => { bulkAction = { status: 'DELIVERED', label: t('orders.bulk.deliver') } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-green-700 text-white rounded-md disabled:opacity-50">{t('orders.bulk.deliver')}</button>
     {/if}
     {#if statusFilter === 'ALL' || statusFilter === 'PENDING' || statusFilter === 'PAID'}
-      <button onclick={() => { bulkAction = { status: 'CANCELLED', label: 'Cancelar' } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md disabled:opacity-50">Cancelar</button>
+      <button onclick={() => { bulkAction = { status: 'CANCELLED', label: t('orders.bulk.cancel') } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md disabled:opacity-50">{t('orders.bulk.cancel')}</button>
     {/if}
   </div>
 {/if}
@@ -170,7 +171,7 @@
     {/each}
   </div>
 {:else if orders.length === 0}
-  <p class="text-gray-500 dark:text-gray-400">Nenhum pedido encontrado.</p>
+  <p class="text-gray-500 dark:text-gray-400">{t('orders.noOrders')}</p>
 {:else}
   <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
     <table class="w-full text-sm">
@@ -179,12 +180,12 @@
           <th class="px-4 py-3 w-10">
             <input type="checkbox" checked={selectedIds.size === orders.length && orders.length > 0} onchange={toggleSelectAll} class="rounded dark:bg-gray-700" />
           </th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">ID</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Cliente</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Total</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Status</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Data</th>
-          <th class="text-right px-4 py-3 font-medium dark:text-gray-300">Ações</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.order')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.customer')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.total')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.status')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.date')}</th>
+          <th class="text-right px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.actions')}</th>
         </tr>
       </thead>
       <tbody>
@@ -202,7 +203,7 @@
                 {statusLabel(order.status)}
               </span>
             </td>
-            <td class="px-4 py-3 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</td>
+            <td class="px-4 py-3 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString(localeMap[getLocale()] || 'pt-BR')}</td>
             <td class="px-4 py-3 text-right">
               <a href="/admin/orders/{order.id}" class="text-blue-600 dark:text-blue-400 hover:underline">Detalhes</a>
             </td>

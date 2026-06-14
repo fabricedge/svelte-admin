@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { getSettings, updateSettings, getMultiStore, updateMultiStore } from '$lib/api/settings'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
-  import { updateBranding } from '$lib/api/stores'
+  import { updateBranding, updateStoreDomain } from '$lib/api/stores'
   import { toast } from 'svelte-sonner'
 
   const ctx = getStoreContext()
@@ -12,6 +12,7 @@
   let saving = $state(false)
   let multiStoreEnabled = $state(false)
   let togglingMultiStore = $state(false)
+  let storeDomain = $state('')
 
   let branding = $state({
     primary_color: '#18181b',
@@ -39,6 +40,8 @@
         favicon_url: settings['branding_favicon_url'] || '',
         font_family: settings['branding_font_family'] || 'Inter, sans-serif',
       }
+
+      if (ctx.currentStore?.domain) storeDomain = ctx.currentStore.domain
 
       try {
         const ms = await getMultiStore()
@@ -79,6 +82,21 @@
       toast.error(err.message)
     } finally {
       togglingMultiStore = false
+    }
+  }
+
+  async function handleDomainSubmit(e: Event) {
+    e.preventDefault()
+    if (!ctx.currentStore) return
+    saving = true
+    try {
+      await updateStoreDomain(ctx.currentStore.id, storeDomain)
+      ctx.currentStore.domain = storeDomain || null
+      toast.success('Domínio salvo')
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      saving = false
     }
   }
 
@@ -273,18 +291,21 @@
     <!-- Domínio -->
     <section>
       <h2 class="text-lg font-semibold mb-4">Domínio</h2>
-      <div class="rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Subdomínio personalizado estará disponível em breve.
-        </p>
-        <input
-          type="text"
-          disabled
-          placeholder="minha-loja"
-          class="mt-3 w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
-        />
-        <p class="mt-1 text-xs text-gray-400">.meusite.com</p>
-      </div>
+      <p class="text-xs text-gray-500 mb-3">Domínio personalizado para a loja: <strong>{ctx.currentStore?.name || '-'}</strong></p>
+      <form onsubmit={handleDomainSubmit} class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Domínio (ex: loja.meusite.com)</label>
+          <input
+            type="text"
+            bind:value={storeDomain}
+            placeholder="loja.meusite.com"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          />
+        </div>
+        <button type="submit" disabled={saving} class="px-6 py-2.5 bg-black text-white rounded-md text-sm disabled:opacity-50">
+          {saving ? 'Salvando...' : 'Salvar domínio'}
+        </button>
+      </form>
     </section>
   </div>
 {/if}

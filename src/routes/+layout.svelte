@@ -3,8 +3,15 @@
   import { logout } from '$lib/api/auth'
   import { page } from '$app/state'
   import { Toaster } from 'svelte-sonner'
+  import { t, getLocale, setLocale } from '$lib/i18n/locale.svelte'
+  import LanguageSwitcher from '$lib/i18n/LanguageSwitcher.svelte'
 
-  let { children } = $props()
+  let { children, data } = $props()
+
+  {
+    const hasExplicit = (() => { try { return ['pt','en','es'].includes(localStorage.getItem('locale') || '') } catch { return false } })()
+    if (data?.locale && !hasExplicit) setLocale(data.locale as 'pt' | 'en' | 'es')
+  }
 
   let user = $state<{ email?: string; role?: string } | null>(null)
   let darkMode = $state(false)
@@ -20,7 +27,7 @@
     } catch {}
 
     user = currentUser
-    if (!currentUser && page.url.pathname !== '/login') {
+    if (!currentUser && page.url.pathname !== '/login' && page.url.pathname !== '/') {
       window.location.href = '/login'
     }
   })
@@ -43,12 +50,12 @@
   }
 
   const navItems = [
-    { label: 'Dashboard', href: '/admin', icon: '📊' },
-    { label: 'Pedidos', href: '/admin/orders', icon: '📦' },
-    { label: 'Produtos', href: '/admin/products', icon: '🏷️' },
-    { label: 'Categorias', href: '/admin/categories', icon: '📂' },
-    { label: 'Clientes', href: '/admin/customers', icon: '👥' },
-    { label: 'Configurações', href: '/admin/settings', icon: '⚙️' },
+    { label: () => t('nav.dashboard'), href: '/admin', icon: '📊' },
+    { label: () => t('nav.orders'), href: '/admin/orders', icon: '📦' },
+    { label: () => t('nav.products'), href: '/admin/products', icon: '🏷️' },
+    { label: () => t('nav.categories'), href: '/admin/categories', icon: '📂' },
+    { label: () => t('nav.customers'), href: '/admin/customers', icon: '👥' },
+    { label: () => t('nav.settings'), href: '/admin/settings', icon: '⚙️' },
   ]
 
   const isSuperAdmin = $derived(user?.role === 'SUPER_ADMIN')
@@ -63,7 +70,7 @@
       class:translate-x-0={sidebarOpen}
     >
       <div class="h-16 flex items-center px-6 font-bold text-lg border-b border-gray-200 dark:border-gray-800 shrink-0">
-        <a href="/admin" class="text-gray-900 dark:text-gray-100">Admin</a>
+        <a href="/admin" class="text-gray-900 dark:text-gray-100">{t('nav.brand')}</a>
       </div>
       <nav class="flex-1 py-4 overflow-y-auto">
         {#each navItems as item}
@@ -74,7 +81,7 @@
             class:font-medium={page.url.pathname.startsWith(item.href)}
           >
             <span>{item.icon}</span>
-            {item.label}
+            {item.label()}
           </a>
         {/each}
       </nav>
@@ -82,10 +89,10 @@
         <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{user?.email}</p>
         <div class="flex items-center gap-3">
           {#if isSuperAdmin}
-            <a href="/superadmin" class="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">Painel Superior</a>
+            <a href="/superadmin" class="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">{t('nav.superAdmin')}</a>
           {/if}
-          <a href="/admin/profile" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Perfil</a>
-          <button onclick={handleLogout} class="text-xs text-red-500 hover:underline">Sair</button>
+          <a href="/admin/profile" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">{t('nav.profile')}</a>
+          <button onclick={handleLogout} class="text-xs text-red-500 hover:underline">{t('nav.signOut')}</button>
         </div>
       </div>
     </aside>
@@ -102,12 +109,13 @@
           </svg>
         </button>
         <p class="text-sm text-gray-500 dark:text-gray-400 flex-1">
-          Logado como <span class="font-medium text-gray-900 dark:text-gray-100">{user?.email}</span>
+          {t('nav.loggedAs')} <span class="font-medium text-gray-900 dark:text-gray-100">{user?.email}</span>
         </p>
+        <LanguageSwitcher />
         <button
           onclick={toggleDark}
           class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
-          title={darkMode ? 'Modo claro' : 'Modo escuro'}
+          title={darkMode ? t('common.lightMode') : t('common.darkMode')}
         >
           {#if darkMode}
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>

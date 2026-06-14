@@ -5,6 +5,7 @@
   import { toast } from 'svelte-sonner'
   import ConfirmModal from '$lib/components/ConfirmModal.svelte'
   import { exportCSV } from '$lib/utils/csv'
+  import { t } from '$lib/i18n/locale.svelte'
 
   let products = $state<any[]>([])
   let categories: string[] = $state([])
@@ -92,15 +93,15 @@
 
 <ConfirmModal
   open={deleteTarget !== null}
-  title="Deletar produto"
+  title={t('products.deleteProduct')}
   message="Tem certeza que deseja deletar este produto?"
-  confirmLabel="Deletar"
+  confirmLabel={t('products.deleteProduct')}
   onConfirm={confirmDelete}
   onCancel={() => { deleteTarget = null }}
 />
 
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-2xl font-bold">Produtos</h1>
+  <h1 class="text-2xl font-bold">{t('products.title')}</h1>
   <div class="flex items-center gap-3">
     <select bind:value={categoryFilter} onchange={onCategoryChange} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300">
       <option value="">Todas as categorias</option>
@@ -116,7 +117,7 @@
       class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300 w-48 lg:w-64"
     />
     <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">CSV</button>
-    <a href="/admin/products/new" class="px-4 py-2 bg-black text-white rounded-md text-sm">Novo Produto</a>
+    <a href="/admin/products/new" class="px-4 py-2 bg-black text-white rounded-md text-sm">{t('products.addProduct')}</a>
   </div>
 </div>
 
@@ -127,7 +128,7 @@
     {/each}
   </div>
 {:else if products.length === 0}
-  <p class="text-gray-500 dark:text-gray-400">Nenhum produto encontrado.</p>
+  <p class="text-gray-500 dark:text-gray-400">{t('products.noProducts')}</p>
 {:else}
   <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
     <table class="w-full text-sm">
@@ -153,8 +154,8 @@
             </td>
             <td class="px-4 py-3 text-right space-x-2">
               <button onclick={() => handleDuplicate(product.id)} class="text-gray-600 dark:text-gray-400 hover:underline text-xs">Duplicar</button>
-              <a href="/admin/products/{product.id}" class="text-blue-600 dark:text-blue-400 hover:underline">Editar</a>
-              <button onclick={() => { deleteTarget = product.id }} class="text-red-600 hover:underline">Deletar</button>
+              <a href="/admin/products/{product.id}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('products.editProduct')}</a>
+              <button onclick={() => { deleteTarget = product.id }} class="text-red-600 hover:underline">{t('products.deleteProduct')}</button>
             </td>
           </tr>
         {/each}

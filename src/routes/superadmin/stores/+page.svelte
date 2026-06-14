@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
-  import { createStore, updateStore, type Store } from '$lib/api/stores'
+  import { createStore, updateStore, updateStoreDomain, type Store } from '$lib/api/stores'
   import { toast } from 'svelte-sonner'
 
   const ctx = getStoreContext()
@@ -32,6 +32,26 @@
     } finally {
       creating = false
     }
+  }
+
+  let editingDomain = $state<string | null>(null)
+  let domainInput = $state('')
+
+  async function handleDomainSave(storeId: string) {
+    if (!domainInput.trim()) return
+    try {
+      const updated = await updateStoreDomain(storeId, domainInput.trim())
+      stores = stores.map((s) => s.id === storeId ? { ...s, domain: updated.domain } : s)
+      toast.success('Domínio atualizado')
+      editingDomain = null
+    } catch (err: any) {
+      toast.error(err.message)
+    }
+  }
+
+  function startDomainEdit(store: Store) {
+    editingDomain = store.id
+    domainInput = store.domain || ''
   }
 
   async function toggleActive(store: Store) {
@@ -94,7 +114,24 @@
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50">
             <td class="px-4 py-3 font-medium">{store.name}</td>
             <td class="px-4 py-3 text-gray-500">/{store.slug}</td>
-            <td class="px-4 py-3 text-gray-500">{store.domain || '-'}</td>
+            <td class="px-4 py-3 text-gray-500">
+              {#if editingDomain === store.id}
+                <form onsubmit={(e) => { e.preventDefault(); handleDomainSave(store.id) }} class="flex gap-2">
+                  <input
+                    type="text"
+                    bind:value={domainInput}
+                    placeholder="loja.exemplo.com"
+                    class="w-40 px-2 py-1 border border-gray-300 rounded text-xs"
+                  />
+                  <button type="submit" class="text-xs text-green-600 hover:underline">Salvar</button>
+                  <button onclick={() => editingDomain = null} class="text-xs text-gray-400 hover:underline">Cancelar</button>
+                </form>
+              {:else}
+                <button onclick={() => startDomainEdit(store)} class="hover:underline cursor-pointer">
+                  {store.domain || '-'}
+                </button>
+              {/if}
+            </td>
             <td class="px-4 py-3">
               <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium {store.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
                 <span class="h-1.5 w-1.5 rounded-full {store.isActive ? 'bg-green-500' : 'bg-gray-400'}" />

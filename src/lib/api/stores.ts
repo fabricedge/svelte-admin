@@ -41,3 +41,7 @@ export async function getBranding(id: string): Promise<{ store: { name: string; 
 export async function updateBranding(id: string, branding: Branding) {
   return put(`/stores/${id}/branding`, branding)
 }
+
+export async function updateStoreDomain(id: string, domain: string) {
+  return put(`/stores/${id}/domain`, { domain })
+}
