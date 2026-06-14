@@ -1,4 +1,5 @@
-const API_BASE = '/api'
+import { PUBLIC_API_URL } from '$env/static/public'
+const API_BASE = PUBLIC_API_URL ? `${PUBLIC_API_URL}/api` : '/api'
 
 function getToken() {
   try { return localStorage.getItem('token') } catch { return null }

@@ -1,12 +1,26 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { getOrder, updateOrderStatus } from '$lib/api/orders'
+  import { getShippingStatus, getShippingRates, createShippingLabel, getTracking } from '$lib/api/shipping'
   import { page } from '$app/state'
   import { toast } from 'svelte-sonner'
 
   let id = $derived(page.params.id!)
   let order = $state<any>(null)
   let loading = $state(true)
+
+  let dhlConfigured = $state(false)
+  let rates = $state<any[]>([])
+  let ratesLoading = $state(false)
+  let ratesError = $state('')
+  let selectedProduct = $state('')
+  let labelLoading = $state(false)
+  let trackingData = $state<any>(null)
+  let trackingLoading = $state(false)
+  let weight = $state(0.5)
+  let length = $state(20)
+  let width = $state(15)
+  let height = $state(10)
 
   function formatPrice(cents: number) {
     return `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
@@ -53,7 +67,19 @@
 
   onMount(async () => {
     try {
-      order = await getOrder(id)
+      const [fetchedOrder, status] = await Promise.all([
+        getOrder(id),
+        getShippingStatus().catch(() => ({ configured: false })),
+      ])
+      order = fetchedOrder
+      dhlConfigured = status.configured
+      if (order.shippingWeight) weight = order.shippingWeight
+      if (order.shippingLength) length = order.shippingLength
+      if (order.shippingWidth) width = order.shippingWidth
+      if (order.shippingHeight) height = order.shippingHeight
+      if (order.trackingCode) {
+        loadTracking(order.trackingCode)
+      }
     } catch {
       toast.error('Pedido não encontrado')
     } finally { loading = false }
@@ -67,6 +93,65 @@
     } catch (err: any) {
       toast.error(err.message)
     }
+  }
+
+  async function calculateRates() {
+    ratesLoading = true
+    ratesError = ''
+    rates = []
+    try {
+      const data = await getShippingRates(id, weight, length, width, height)
+      rates = data.products || []
+      if (rates.length === 0) ratesError = 'Nenhum produto disponível para esse CEP'
+    } catch (err: any) {
+      ratesError = err.message
+    } finally { ratesLoading = false }
+  }
+
+  async function generateLabel() {
+    if (!selectedProduct) {
+      toast.error('Selecione um produto DHL primeiro')
+      return
+    }
+    labelLoading = true
+    try {
+      const result = await createShippingLabel(id, selectedProduct, weight, length, width, height)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        order.trackingCode = result.shipmentTrackingNumber
+        order.shippingLabelB64 = result.labelB64
+        order.shippingProduct = selectedProduct
+        toast.success('Etiqueta gerada!')
+        loadTracking(result.shipmentTrackingNumber)
+      }
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally { labelLoading = false }
+  }
+
+  async function loadTracking(code: string) {
+    trackingLoading = true
+    try {
+      trackingData = await getTracking(code)
+    } catch {
+      trackingData = null
+    } finally { trackingLoading = false }
+  }
+
+  function downloadLabel() {
+    if (!order.shippingLabelB64) return
+    const byteCharacters = atob(order.shippingLabelB64)
+    const byteNumbers = new Array(byteCharacters.length)
+    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i)
+    const byteArray = new Uint8Array(byteNumbers)
+    const blob = new Blob([byteArray], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `etiqueta-${order.id.slice(0, 8)}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 </script>
 
@@ -155,6 +240,103 @@
           {/if}
         </div>
       </div>
+
+      {#if dhlConfigured}
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+          <h2 class="font-bold mb-4">
+            <span class="text-red-600">DHL</span> Express
+          </h2>
+
+          {#if order.trackingCode}
+            <div class="space-y-3 text-sm">
+              <div>
+                <p class="text-gray-500 text-xs">Código de rastreio</p>
+                <p class="font-mono text-sm">{order.trackingCode}</p>
+              </div>
+              {#if order.shippingLabelB64}
+                <button
+                  onclick={downloadLabel}
+                  class="w-full py-2 px-4 bg-blue-600 text-white rounded-md text-sm"
+                >
+                  Download Etiqueta (PDF)
+                </button>
+              {/if}
+              {#if trackingData}
+                <div class="pt-2 border-t border-gray-100">
+                  <p class="text-gray-500 text-xs mb-1">Status: {trackingData.status}</p>
+                  <div class="space-y-2 max-h-40 overflow-y-auto">
+                    {#each trackingData.events as event}
+                      <div class="border-l-2 border-gray-200 pl-3 py-1">
+                        <p class="text-xs font-medium">{event.description}</p>
+                        <p class="text-xs text-gray-400">{event.location} - {new Date(event.timestamp).toLocaleString('pt-BR')}</p>
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              {:else if trackingLoading}
+                <p class="text-xs text-gray-400">Carregando rastreio...</p>
+              {/if}
+            </div>
+          {:else}
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Peso (kg)</label>
+                  <input type="number" step="0.1" min="0.1" bind:value={weight} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Compr. (cm)</label>
+                  <input type="number" step="1" min="1" bind:value={length} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Larg. (cm)</label>
+                  <input type="number" step="1" min="1" bind:value={width} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Alt. (cm)</label>
+                  <input type="number" step="1" min="1" bind:value={height} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
+                </div>
+              </div>
+
+              <button
+                onclick={calculateRates}
+                disabled={ratesLoading}
+                class="w-full py-2 px-4 bg-yellow-500 text-white rounded-md text-sm disabled:opacity-50"
+              >
+                {ratesLoading ? 'Calculando...' : 'Calcular frete DHL'}
+              </button>
+
+              {#if ratesError}
+                <p class="text-xs text-red-600">{ratesError}</p>
+              {/if}
+
+              {#if rates.length > 0}
+                <div class="space-y-2 pt-2 border-t border-gray-100">
+                  <p class="text-xs text-gray-500">Produtos disponíveis:</p>
+                  {#each rates as rate}
+                    <label class="flex items-center gap-2 p-2 rounded border {selectedProduct === rate.productCode ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'} cursor-pointer">
+                      <input type="radio" name="product" value={rate.productCode} bind:group={selectedProduct} />
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">{rate.productName}</p>
+                        <p class="text-xs text-gray-500">
+                          {rate.deliveryType} - {formatPrice(Math.round(rate.totalPrice * 100))}
+                        </p>
+                      </div>
+                    </label>
+                  {/each}
+                  <button
+                    onclick={generateLabel}
+                    disabled={labelLoading || !selectedProduct}
+                    class="w-full py-2 px-4 bg-red-600 text-white rounded-md text-sm disabled:opacity-50"
+                  >
+                    {labelLoading ? 'Gerando...' : 'Gerar etiqueta DHL'}
+                  </button>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 {/if}

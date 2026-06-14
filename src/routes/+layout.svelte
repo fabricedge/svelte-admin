@@ -50,11 +50,13 @@
     { label: 'Clientes', href: '/admin/customers', icon: '👥' },
     { label: 'Configurações', href: '/admin/settings', icon: '⚙️' },
   ]
+
+  const isSuperAdmin = $derived(user?.role === 'SUPER_ADMIN')
 </script>
 
 <Toaster />
 
-{#if user && page.url.pathname !== '/login'}
+{#if user && page.url.pathname !== '/login' && !page.url.pathname.startsWith('/superadmin')}
   <div class="flex min-h-screen bg-gray-50 dark:bg-gray-950 dark:text-gray-100">
     <aside
       class="fixed inset-y-0 left-0 z-40 w-60 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-transform -translate-x-full lg:translate-x-0 lg:static"
@@ -79,6 +81,9 @@
       <div class="p-4 border-t border-gray-200 dark:border-gray-800 shrink-0">
         <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{user?.email}</p>
         <div class="flex items-center gap-3">
+          {#if isSuperAdmin}
+            <a href="/superadmin" class="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium">Painel Superior</a>
+          {/if}
           <a href="/admin/profile" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Perfil</a>
           <button onclick={handleLogout} class="text-xs text-red-500 hover:underline">Sair</button>
         </div>
@@ -116,6 +121,8 @@
       </main>
     </div>
   </div>
+{:else if user && page.url.pathname.startsWith('/superadmin')}
+  {@render children()}
 {:else}
   <main class="min-h-screen">
     {@render children()}
