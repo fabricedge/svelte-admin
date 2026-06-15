@@ -3,6 +3,7 @@
   import { getAdmins, updateStorePermission } from '$lib/api/users'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
   import { toast } from 'svelte-sonner'
+  import { t } from '$lib/i18n/locale.svelte'
 
   const ctx = getStoreContext()
 
@@ -28,7 +29,7 @@
       if (!user) return
       const result = await updateStorePermission(userId, !user.canCreateStores)
       users = users.map((u) => u.id === userId ? { ...u, canCreateStores: result.canCreateStores } : u)
-      toast.success('Permissão atualizada')
+      toast.success(t('superadmin.usersPage.permissionUpdated'))
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -37,10 +38,10 @@
   }
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Usuários</h1>
+<h1 class="text-2xl font-bold mb-6">{t('superadmin.usersPage.title')}</h1>
 
 <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-  Gerencie quais ADMINS podem criar lojas. O toggle só funciona quando <strong>Multi-store</strong> estiver ativado.
+  {t('superadmin.usersPage.description')}
 </p>
 
 {#if loading}
@@ -54,11 +55,11 @@
     <table class="w-full text-sm">
       <thead class="bg-gray-50 dark:bg-gray-900 text-left">
         <tr>
-          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Email</th>
-          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Nome</th>
-          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Tipo</th>
-          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Criar lojas</th>
-          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Lojas</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.email')}</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.name')}</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.type')}</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.canCreate')}</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.stores')}</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -68,9 +69,9 @@
             <td class="px-4 py-3 text-gray-500">{user.name || '-'}</td>
             <td class="px-4 py-3">
               {#if user.role === 'SUPER_ADMIN'}
-                <span class="rounded bg-purple-100 dark:bg-purple-900 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300">SUPER ADMIN</span>
+                <span class="rounded bg-purple-100 dark:bg-purple-900 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300">{t('superadmin.usersPage.superAdminBadge')}</span>
               {:else}
-                <span class="text-gray-600 dark:text-gray-400">Admin</span>
+                <span class="text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.admin')}</span>
               {/if}
             </td>
             <td class="px-4 py-3">
@@ -90,7 +91,7 @@
                   />
                 </button>
               {:else}
-                <span class="text-xs text-gray-400">multi-store inativo</span>
+                <span class="text-xs text-gray-400">{t('superadmin.usersPage.multiStoreInactive')}</span>
               {/if}
             </td>
             <td class="px-4 py-3 text-gray-500">{user.storeCount}</td>

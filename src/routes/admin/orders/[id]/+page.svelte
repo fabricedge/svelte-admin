@@ -4,6 +4,7 @@
   import { getShippingStatus, getShippingRates, createShippingLabel, getTracking } from '$lib/api/shipping'
   import { page } from '$app/state'
   import { toast } from 'svelte-sonner'
+  import { t } from '$lib/i18n/locale.svelte'
 
   let id = $derived(page.params.id!)
   let order = $state<any>(null)
@@ -27,14 +28,7 @@
   }
 
   function statusLabel(status: string) {
-    const labels: Record<string, string> = {
-      PENDING: 'Pendente',
-      PAID: 'Pago',
-      SHIPPED: 'Enviado',
-      DELIVERED: 'Entregue',
-      CANCELLED: 'Cancelado',
-    }
-    return labels[status] || status
+    return t(`orders.statusLabels.${status}`) || status
   }
 
   function statusColor(status: string) {
@@ -51,17 +45,17 @@
     return 'bg-gray-100 text-gray-700'
   }
 
-  const nextStatuses: Record<string, { status: string; label: string; class: string }[]> = {
+  const nextStatuses: Record<string, { status: string; labelKey: string; class: string }[]> = {
     PENDING: [
-      { status: 'PAID', label: 'Marcar como Pago', class: 'bg-green-600' },
-      { status: 'CANCELLED', label: 'Cancelar', class: 'bg-red-600' },
+      { status: 'PAID', labelKey: 'orders.bulk.pay', class: 'bg-green-600' },
+      { status: 'CANCELLED', labelKey: 'orders.bulk.cancel', class: 'bg-red-600' },
     ],
     PAID: [
-      { status: 'SHIPPED', label: 'Marcar como Enviado', class: 'bg-blue-600' },
-      { status: 'CANCELLED', label: 'Cancelar', class: 'bg-red-600' },
+      { status: 'SHIPPED', labelKey: 'orders.bulk.ship', class: 'bg-blue-600' },
+      { status: 'CANCELLED', labelKey: 'orders.bulk.cancel', class: 'bg-red-600' },
     ],
     SHIPPED: [
-      { status: 'DELIVERED', label: 'Marcar como Entregue', class: 'bg-green-700' },
+      { status: 'DELIVERED', labelKey: 'orders.bulk.deliver', class: 'bg-green-700' },
     ],
   }
 
@@ -81,7 +75,7 @@
         loadTracking(order.trackingCode)
       }
     } catch {
-      toast.error('Pedido não encontrado')
+      toast.error(t('orders.detail.notFound'))
     } finally { loading = false }
   })
 
@@ -89,7 +83,7 @@
     try {
       const updated = await updateOrderStatus(id, status)
       order = updated
-      toast.success('Status atualizado')
+      toast.success(t('orders.statusUpdated'))
     } catch (err: any) {
       toast.error(err.message)
     }
@@ -102,7 +96,7 @@
     try {
       const data = await getShippingRates(id, weight, length, width, height)
       rates = data.products || []
-      if (rates.length === 0) ratesError = 'Nenhum produto disponível para esse CEP'
+      if (rates.length === 0) ratesError = t('orders.dhl.noProducts')
     } catch (err: any) {
       ratesError = err.message
     } finally { ratesLoading = false }
@@ -110,7 +104,7 @@
 
   async function generateLabel() {
     if (!selectedProduct) {
-      toast.error('Selecione um produto DHL primeiro')
+      toast.error(t('orders.dhl.selectProduct'))
       return
     }
     labelLoading = true
@@ -122,7 +116,7 @@
         order.trackingCode = result.shipmentTrackingNumber
         order.shippingLabelB64 = result.labelB64
         order.shippingProduct = selectedProduct
-        toast.success('Etiqueta gerada!')
+        toast.success(t('orders.dhl.labelGenerated'))
         loadTracking(result.shipmentTrackingNumber)
       }
     } catch (err: any) {
@@ -155,7 +149,7 @@
   }
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Pedido #{id?.slice(0, 8)}</h1>
+<h1 class="text-2xl font-bold mb-6">{t('orders.detail.title', { id: id?.slice(0, 8) })}</h1>
 
 {#if loading}
   <div class="space-y-4">
@@ -163,29 +157,29 @@
     <div class="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
   </div>
 {:else if !order}
-  <p class="text-gray-500">Pedido não encontrado.</p>
+  <p class="text-gray-500">{t('orders.detail.notFound')}</p>
 {:else}
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
       <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="font-bold mb-4">Itens</h2>
+        <h2 class="font-bold mb-4">{t('orders.detail.items')}</h2>
         {#each order.items || [] as item}
           <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
             <div>
               <p class="font-medium">{item.product?.name || item.productId}</p>
-              <p class="text-sm text-gray-500">Qtd: {item.quantity} x {formatPrice(item.price)}</p>
+              <p class="text-sm text-gray-500">{t('orders.detail.qty', { quantity: item.quantity, price: formatPrice(item.price) })}</p>
             </div>
             <p class="font-medium">{formatPrice(item.price * item.quantity)}</p>
           </div>
         {/each}
         <div class="flex justify-between pt-4 font-bold">
-          <span>Total</span>
+          <span>{t('orders.detail.total')}</span>
           <span>{formatPrice(order.total)}</span>
         </div>
       </div>
 
       <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="font-bold mb-4">Histórico</h2>
+        <h2 class="font-bold mb-4">{t('orders.detail.history')}</h2>
         {#if order.events && order.events.length > 0}
           <div class="relative pl-6 before:absolute before:left-2 before:top-1 before:bottom-1 before:w-0.5 before:bg-gray-200">
             {#each order.events as event}
@@ -200,14 +194,14 @@
             {/each}
           </div>
         {:else}
-          <p class="text-sm text-gray-500">Nenhum evento registrado.</p>
+          <p class="text-sm text-gray-500">{t('orders.detail.noEvents')}</p>
         {/if}
       </div>
     </div>
 
     <div class="space-y-6">
       <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="font-bold mb-4">Status</h2>
+        <h2 class="font-bold mb-4">{t('orders.detail.status')}</h2>
         <p class="inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 {statusBg(order.status)}">{statusLabel(order.status)}</p>
         <div class="space-y-2">
           {#each (nextStatuses[order.status] || []) as action}
@@ -215,26 +209,26 @@
               onclick={() => updateStatus(action.status)}
               class="w-full py-2 px-4 text-white rounded-md text-sm {action.class}"
             >
-              {action.label}
+              {t(action.labelKey)}
             </button>
           {/each}
         </div>
       </div>
 
       <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="font-bold mb-4">Informações</h2>
+        <h2 class="font-bold mb-4">{t('orders.detail.info')}</h2>
         <div class="space-y-2 text-sm">
-          <p class="text-gray-500">Data: {new Date(order.createdAt).toLocaleString()}</p>
+          <p class="text-gray-500">{t('orders.detail.date')} {new Date(order.createdAt).toLocaleString()}</p>
           {#if order.user}
             <div class="pt-2 border-t border-gray-100">
-              <p class="text-gray-500 mb-1">Cliente</p>
+              <p class="text-gray-500 mb-1">{t('orders.detail.customer')}</p>
               <p class="font-medium">{order.user.name || order.user.email}</p>
               <p class="text-gray-500 text-xs">{order.user.email}</p>
             </div>
           {/if}
           {#if order.stripePaymentIntentId}
             <div class="pt-2 border-t border-gray-100">
-              <p class="text-gray-500">PaymentIntent</p>
+              <p class="text-gray-500">{t('orders.detail.paymentIntent')}</p>
               <p class="font-mono text-xs">{order.stripePaymentIntentId}</p>
             </div>
           {/if}
@@ -244,13 +238,13 @@
       {#if dhlConfigured}
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <h2 class="font-bold mb-4">
-            <span class="text-red-600">DHL</span> Express
+            <span class="text-red-600">DHL</span> {t('orders.dhl.title')}
           </h2>
 
           {#if order.trackingCode}
             <div class="space-y-3 text-sm">
               <div>
-                <p class="text-gray-500 text-xs">Código de rastreio</p>
+                <p class="text-gray-500 text-xs">{t('orders.dhl.trackingCode')}</p>
                 <p class="font-mono text-sm">{order.trackingCode}</p>
               </div>
               {#if order.shippingLabelB64}
@@ -258,12 +252,12 @@
                   onclick={downloadLabel}
                   class="w-full py-2 px-4 bg-blue-600 text-white rounded-md text-sm"
                 >
-                  Download Etiqueta (PDF)
+                  {t('orders.dhl.downloadLabel')}
                 </button>
               {/if}
               {#if trackingData}
                 <div class="pt-2 border-t border-gray-100">
-                  <p class="text-gray-500 text-xs mb-1">Status: {trackingData.status}</p>
+                  <p class="text-gray-500 text-xs mb-1">{t('orders.dhl.status')} {trackingData.status}</p>
                   <div class="space-y-2 max-h-40 overflow-y-auto">
                     {#each trackingData.events as event}
                       <div class="border-l-2 border-gray-200 pl-3 py-1">
@@ -274,26 +268,26 @@
                   </div>
                 </div>
               {:else if trackingLoading}
-                <p class="text-xs text-gray-400">Carregando rastreio...</p>
+                <p class="text-xs text-gray-400">{t('orders.dhl.loading')}</p>
               {/if}
             </div>
           {:else}
             <div class="space-y-3">
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Peso (kg)</label>
+                  <label class="block text-xs text-gray-500 mb-1">{t('orders.dhl.weight')}</label>
                   <input type="number" step="0.1" min="0.1" bind:value={weight} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
                 </div>
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Compr. (cm)</label>
+                  <label class="block text-xs text-gray-500 mb-1">{t('orders.dhl.length')}</label>
                   <input type="number" step="1" min="1" bind:value={length} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
                 </div>
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Larg. (cm)</label>
+                  <label class="block text-xs text-gray-500 mb-1">{t('orders.dhl.width')}</label>
                   <input type="number" step="1" min="1" bind:value={width} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
                 </div>
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Alt. (cm)</label>
+                  <label class="block text-xs text-gray-500 mb-1">{t('orders.dhl.height')}</label>
                   <input type="number" step="1" min="1" bind:value={height} class="w-full border border-gray-300 rounded px-2 py-1 text-sm" />
                 </div>
               </div>
@@ -303,7 +297,7 @@
                 disabled={ratesLoading}
                 class="w-full py-2 px-4 bg-yellow-500 text-white rounded-md text-sm disabled:opacity-50"
               >
-                {ratesLoading ? 'Calculando...' : 'Calcular frete DHL'}
+                {ratesLoading ? t('orders.dhl.calculating') : t('orders.dhl.calculate')}
               </button>
 
               {#if ratesError}
@@ -312,7 +306,7 @@
 
               {#if rates.length > 0}
                 <div class="space-y-2 pt-2 border-t border-gray-100">
-                  <p class="text-xs text-gray-500">Produtos disponíveis:</p>
+                  <p class="text-xs text-gray-500">{t('orders.dhl.availableProducts')}</p>
                   {#each rates as rate}
                     <label class="flex items-center gap-2 p-2 rounded border {selectedProduct === rate.productCode ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'} cursor-pointer">
                       <input type="radio" name="product" value={rate.productCode} bind:group={selectedProduct} />
@@ -329,7 +323,7 @@
                     disabled={labelLoading || !selectedProduct}
                     class="w-full py-2 px-4 bg-red-600 text-white rounded-md text-sm disabled:opacity-50"
                   >
-                    {labelLoading ? 'Gerando...' : 'Gerar etiqueta DHL'}
+                    {labelLoading ? t('orders.dhl.generating') : t('orders.dhl.generate')}
                   </button>
                 </div>
               {/if}

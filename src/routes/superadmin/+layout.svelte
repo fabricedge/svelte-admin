@@ -61,6 +61,7 @@
     { label: () => t('superadmin.dashboard'), href: '/superadmin', icon: '📊' },
     { label: () => t('superadmin.stores'), href: '/superadmin/stores', icon: '🏪' },
     { label: () => t('superadmin.users'), href: '/superadmin/users', icon: '👥' },
+    { label: () => t('superadmin.storeRequests'), href: '/superadmin/store-requests', icon: '📋' },
     { label: () => t('superadmin.settings'), href: '/superadmin/settings', icon: '⚙️' },
   ]
 </script>

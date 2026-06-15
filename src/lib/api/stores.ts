@@ -7,6 +7,10 @@ export interface Store {
   domain: string | null
   isActive: boolean
   createdAt: string
+  storefrontType?: 'DEFAULT' | 'INDEPENDENT'
+  deploymentUrl?: string | null
+  deploymentStatus?: string | null
+  deploymentToken?: string | null
 }
 
 export async function getStores(): Promise<Store[]> {

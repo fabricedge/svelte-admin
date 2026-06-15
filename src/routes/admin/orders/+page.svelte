@@ -71,7 +71,7 @@
     bulkLoading = true
     try {
       await bulkUpdateOrderStatus([...selectedIds], bulkAction.status)
-      toast.success(`${selectedIds.size} pedido(s) atualizado(s)`)
+      toast.success(t('orders.bulk.updated', { count: selectedIds.size }))
       selectedIds = new Set()
       bulkAction = null
       load()
@@ -84,7 +84,7 @@
 
   function handleExportCSV() {
     const locale = localeMap[getLocale()] || 'pt-BR'
-    exportCSV('pedidos', ['ID', 'Cliente', 'Total', 'Status', 'Data'],
+    exportCSV(t('orders.title'), [t('orders.table.order'), t('orders.table.customer'), t('orders.table.total'), t('orders.table.status'), t('orders.table.date')],
       orders.map((o) => [
         o.id,
         o.user?.email || '-',
@@ -113,8 +113,8 @@
 
 <ConfirmModal
   open={bulkAction !== null}
-  title="Ação em lote"
-  message={bulkAction ? `Marcar ${selectedIds.size} pedido(s) como &quot;${bulkAction.label}&quot;?` : ''}
+  title={t('orders.bulk.title')}
+  message={bulkAction ? t('orders.bulk.message', { count: selectedIds.size, label: bulkAction.label }) : ''}
   confirmLabel={bulkAction?.label ?? t('common.confirm')}
   onConfirm={confirmBulkAction}
   onCancel={() => { bulkAction = null }}
@@ -148,7 +148,7 @@
 
 {#if selectedIds.size > 0}
   <div class="mb-4 flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-    <span class="text-sm text-gray-600 dark:text-gray-400">{selectedIds.size} selecionado(s)</span>
+    <span class="text-sm text-gray-600 dark:text-gray-400">{t('orders.bulk.selectedCount', { count: selectedIds.size })}</span>
     {#if statusFilter === 'ALL' || statusFilter === 'PENDING'}
       <button onclick={() => { bulkAction = { status: 'PAID', label: t('orders.bulk.pay') } }} disabled={bulkLoading} class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md disabled:opacity-50">{t('orders.bulk.pay')}</button>
     {/if}
@@ -205,7 +205,7 @@
             </td>
             <td class="px-4 py-3 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString(localeMap[getLocale()] || 'pt-BR')}</td>
             <td class="px-4 py-3 text-right">
-              <a href="/admin/orders/{order.id}" class="text-blue-600 dark:text-blue-400 hover:underline">Detalhes</a>
+              <a href="/admin/orders/{order.id}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('common.details')}</a>
             </td>
           </tr>
         {/each}
@@ -215,9 +215,9 @@
 
   {#if totalPages > 1}
     <div class="flex items-center justify-center gap-2 mt-4">
-      <button onclick={() => { currentPage = Math.max(1, currentPage - 1); load() }} disabled={currentPage <= 1} class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300">Anterior</button>
-      <span class="text-sm text-gray-600 dark:text-gray-400">Página {currentPage} de {totalPages}</span>
-      <button onclick={() => { currentPage = Math.min(totalPages, currentPage + 1); load() }} disabled={currentPage >= totalPages} class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300">Próximo</button>
+      <button onclick={() => { currentPage = Math.max(1, currentPage - 1); load() }} disabled={currentPage <= 1} class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300">{t('common.pagination.previous')}</button>
+      <span class="text-sm text-gray-600 dark:text-gray-400">{t('common.pagination.page', { current: currentPage, total: totalPages })}</span>
+      <button onclick={() => { currentPage = Math.min(totalPages, currentPage + 1); load() }} disabled={currentPage >= totalPages} class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300">{t('common.pagination.next')}</button>
     </div>
   {/if}
 {/if}

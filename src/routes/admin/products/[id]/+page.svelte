@@ -4,6 +4,7 @@
   import { page } from '$app/state'
   import { toast } from 'svelte-sonner'
   import ImageGallery from '$lib/components/ImageGallery.svelte'
+  import { t } from '$lib/i18n/locale.svelte'
 
   let id = $derived(page.params.id!)
 
@@ -34,7 +35,7 @@
       categories = categoriesData.categories || []
       loaded = true
     } catch {
-      toast.error('Produto não encontrado')
+      toast.error(t('products.notFound'))
     }
   })
 
@@ -51,14 +52,14 @@
         inventory,
         images,
       })
-      toast.success('Produto atualizado')
+      toast.success(t('products.updated'))
     } catch (err: any) {
       toast.error(err.message)
     } finally { loading = false }
   }
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Editar Produto</h1>
+<h1 class="text-2xl font-bold mb-6">{t('products.editProduct')}</h1>
 
 {#if !loaded}
   <div class="space-y-4">
@@ -69,22 +70,22 @@
   <form onsubmit={handleSubmit} class="max-w-2xl space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.name')}</label>
         <input type="text" bind:value={name} required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.slug')}</label>
         <input type="text" bind:value={slug} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.price')}</label>
         <input type="number" bind:value={price} min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.category')}</label>
         <div class="flex gap-2">
           <select bind:value={category} class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
-            <option value="">Sem categoria</option>
+            <option value="">{t('products.form.noCategory')}</option>
             {#each categories as cat}
               <option value={cat}>{cat}</option>
             {/each}
@@ -93,23 +94,23 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Estoque</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.inventory')}</label>
         <input type="number" bind:value={inventory} min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
       </div>
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+      <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.description')}</label>
       <textarea bind:value={description} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" rows="4"></textarea>
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Imagens</label>
+      <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.images')}</label>
       <ImageGallery bind:images />
     </div>
 
     <button type="submit" disabled={loading} class="px-6 py-2.5 bg-black text-white rounded-md text-sm disabled:opacity-50">
-      {loading ? 'Salvando...' : 'Salvar'}
+      {loading ? t('products.form.saving') : t('products.form.save')}
     </button>
   </form>
 {/if}

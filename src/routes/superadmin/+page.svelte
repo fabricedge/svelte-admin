@@ -2,11 +2,11 @@
   import { onMount } from 'svelte'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
   import { getStores } from '$lib/api/stores'
+  import { t } from '$lib/i18n/locale.svelte'
 
   const ctx = getStoreContext()
 
   let storesCount = $state(0)
-  let adminsCount = $state(0)
   let loading = $state(true)
 
   onMount(async () => {
@@ -18,10 +18,10 @@
   })
 </script>
 
-<h1 class="text-2xl font-bold mb-6">Painel Superior</h1>
+<h1 class="text-2xl font-bold mb-6">{t('superadmin.dashboardPage.title')}</h1>
 
 <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-  Gerencie todas as lojas, branding e configurações globais.
+  {t('superadmin.dashboardPage.description')}
 </p>
 
 {#if loading}
@@ -33,15 +33,15 @@
 {:else}
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div class="rounded-lg border border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Lojas</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{t('superadmin.dashboardPage.stores')}</p>
       <p class="text-3xl font-bold mt-1">{storesCount}</p>
     </div>
     <div class="rounded-lg border border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Loja atual</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{t('superadmin.dashboardPage.currentStore')}</p>
       <p class="text-lg font-bold mt-1 truncate">{ctx.currentStore?.name || '-'}</p>
     </div>
     <div class="rounded-lg border border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900">
-      <p class="text-sm text-gray-500 dark:text-gray-400">Multi-store</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{t('superadmin.dashboardPage.multiStore')}</p>
       <p class="text-3xl font-bold mt-1">{ctx.multiStoreEnabled ? '✅' : '❌'}</p>
     </div>
   </div>

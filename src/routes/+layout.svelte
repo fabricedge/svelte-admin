@@ -54,6 +54,8 @@
     { label: () => t('nav.orders'), href: '/admin/orders', icon: '📦' },
     { label: () => t('nav.products'), href: '/admin/products', icon: '🏷️' },
     { label: () => t('nav.categories'), href: '/admin/categories', icon: '📂' },
+    { label: () => t('nav.stores'), href: '/admin/stores', icon: '🏪' },
+    { label: () => t('nav.customStorefront'), href: '/admin/custom-storefront', icon: '🎨' },
     { label: () => t('nav.customers'), href: '/admin/customers', icon: '👥' },
     { label: () => t('nav.settings'), href: '/admin/settings', icon: '⚙️' },
   ]

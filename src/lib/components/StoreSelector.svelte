@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getStoreContext } from '$lib/stores/store-context.svelte'
+  import { t } from '$lib/i18n/locale.svelte'
 
   const ctx = getStoreContext()
 
@@ -13,17 +14,17 @@
     <button
       onclick={() => { if (ctx.canManageStores()) open = !open }}
       class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors {ctx.canManageStores() ? 'hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer' : 'cursor-default'}"
-      title={!ctx.canManageStores() ? 'Disponível em breve' : 'Trocar loja'}
+      title={!ctx.canManageStores() ? t('common.storeSelector.unavailable') : t('common.storeSelector.switchStore')}
     >
       <div class="flex-1 min-w-0">
         <p class="truncate font-medium text-gray-900 dark:text-gray-100">
-          {ctx.currentStore?.name || 'Carregando...'}
+          {ctx.currentStore?.name || t('common.storeLoading')}
         </p>
         <p class="truncate text-xs text-gray-500 dark:text-gray-400">
           {ctx.currentStore ? `/${ctx.currentStore.slug}` : ''}
         </p>
         {#if ctx.isSuperAdmin}
-          <span class="inline-block mt-0.5 rounded bg-purple-100 dark:bg-purple-900 px-1 py-0.5 text-[9px] font-medium text-purple-700 dark:text-purple-300 leading-none">SUPER ADMIN</span>
+          <span class="inline-block mt-0.5 rounded bg-purple-100 dark:bg-purple-900 px-1 py-0.5 text-[9px] font-medium text-purple-700 dark:text-purple-300 leading-none">{t('superadmin.badge')}</span>
         {/if}
       </div>
       {#if ctx.canManageStores()}
@@ -31,7 +32,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       {:else}
-        <span class="shrink-0 text-xs text-gray-400" title="Disponível em breve">🔒</span>
+        <span class="shrink-0 text-xs text-gray-400" title={t('common.storeSelector.unavailable')}>🔒</span>
       {/if}
     </button>
 

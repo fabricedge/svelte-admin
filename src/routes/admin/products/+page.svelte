@@ -57,7 +57,7 @@
     try {
       await deleteProduct(deleteTarget)
       products = products.filter(p => p.id !== deleteTarget)
-      toast.success('Produto deletado')
+      toast.success(t('products.deleted'))
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -68,7 +68,7 @@
   async function handleDuplicate(id: string) {
     try {
       await duplicateProduct(id)
-      toast.success('Produto duplicado')
+      toast.success(t('products.duplicated'))
       load()
     } catch (err: any) {
       toast.error(err.message)
@@ -76,7 +76,7 @@
   }
 
   function handleExportCSV() {
-    exportCSV('produtos', ['Nome', 'Preço', 'Categoria', 'Estoque'],
+    exportCSV(t('products.title'), [t('products.table.name'), t('products.table.price'), t('products.table.category'), t('products.table.inventory')],
       products.map((p) => [
         p.name,
         formatPrice(p.price),
@@ -94,7 +94,7 @@
 <ConfirmModal
   open={deleteTarget !== null}
   title={t('products.deleteProduct')}
-  message="Tem certeza que deseja deletar este produto?"
+  message={t('products.confirmDelete')}
   confirmLabel={t('products.deleteProduct')}
   onConfirm={confirmDelete}
   onCancel={() => { deleteTarget = null }}
@@ -104,19 +104,19 @@
   <h1 class="text-2xl font-bold">{t('products.title')}</h1>
   <div class="flex items-center gap-3">
     <select bind:value={categoryFilter} onchange={onCategoryChange} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300">
-      <option value="">Todas as categorias</option>
+      <option value="">{t('products.categoryAll')}</option>
       {#each categories as cat}
         <option value={cat}>{cat}</option>
       {/each}
     </select>
     <input
       type="text"
-      placeholder="Buscar produtos..."
+      placeholder={t('products.searchPlaceholder')}
       bind:value={search}
       oninput={onSearchInput}
       class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300 w-48 lg:w-64"
     />
-    <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">CSV</button>
+    <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">{t('common.csv')}</button>
     <a href="/admin/products/new" class="px-4 py-2 bg-black text-white rounded-md text-sm">{t('products.addProduct')}</a>
   </div>
 </div>
@@ -134,11 +134,11 @@
     <table class="w-full text-sm">
       <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800">
         <tr>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Nome</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Preço</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Categoria</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">Estoque</th>
-          <th class="text-right px-4 py-3 font-medium dark:text-gray-300">Ações</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.name')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.price')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.category')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.inventory')}</th>
+          <th class="text-right px-4 py-3 font-medium dark:text-gray-300">{t('products.table.actions')}</th>
         </tr>
       </thead>
       <tbody>
@@ -153,7 +153,7 @@
               </span>
             </td>
             <td class="px-4 py-3 text-right space-x-2">
-              <button onclick={() => handleDuplicate(product.id)} class="text-gray-600 dark:text-gray-400 hover:underline text-xs">Duplicar</button>
+              <button onclick={() => handleDuplicate(product.id)} class="text-gray-600 dark:text-gray-400 hover:underline text-xs">{t('products.duplicate')}</button>
               <a href="/admin/products/{product.id}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('products.editProduct')}</a>
               <button onclick={() => { deleteTarget = product.id }} class="text-red-600 hover:underline">{t('products.deleteProduct')}</button>
             </td>
@@ -170,15 +170,15 @@
         disabled={currentPage <= 1}
         class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300"
       >
-        Anterior
+        {t('common.pagination.previous')}
       </button>
-      <span class="text-sm text-gray-600 dark:text-gray-400">Página {currentPage} de {totalPages}</span>
+      <span class="text-sm text-gray-600 dark:text-gray-400">{t('common.pagination.page', { current: currentPage, total: totalPages })}</span>
       <button
         onclick={() => { currentPage = Math.min(totalPages, currentPage + 1); load() }}
         disabled={currentPage >= totalPages}
         class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md disabled:opacity-50 dark:text-gray-300"
       >
-        Próximo
+        {t('common.pagination.next')}
       </button>
     </div>
   {/if}
