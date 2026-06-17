@@ -16,6 +16,8 @@
   let enableToken = $state(false)
   let submitting = $state(false)
 
+  let slug = $derived(storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja')
+
   let activeTab = $state<'stores' | 'requests'>('stores')
 
   onMount(async () => {

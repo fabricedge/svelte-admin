@@ -20,10 +20,13 @@ export class StoreContext {
     try {
       const data = await getStores()
       this.stores = data
-      if (data.length > 0 && !this.currentStore) {
-        this.currentStore = data[0]
+      const savedId = this.loadSavedStoreId()
+      if (data.length > 0) {
+        const saved = savedId ? data.find((s) => s.id === savedId) : null
+        this.currentStore = saved || data[0]
       }
       if (this.currentStore) {
+        this.saveStoreId(this.currentStore.id)
         await this.loadBranding(this.currentStore.id)
       }
     } catch (err) {
@@ -35,7 +38,16 @@ export class StoreContext {
 
   async switchStore(store: Store) {
     this.currentStore = store
+    this.saveStoreId(store.id)
     await this.loadBranding(store.id)
+  }
+
+  private saveStoreId(id: string) {
+    try { localStorage.setItem('selectedStoreId', id) } catch {}
+  }
+
+  private loadSavedStoreId(): string | null {
+    try { return localStorage.getItem('selectedStoreId') } catch { return null }
   }
 
   async loadBranding(storeId: string) {

@@ -5,10 +5,16 @@ function getToken() {
   try { return localStorage.getItem('token') } catch { return null }
 }
 
+function getStoreId() {
+  try { return localStorage.getItem('selectedStoreId') } catch { return null }
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...options.headers as Record<string, string> }
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
+  const storeId = getStoreId()
+  if (storeId) headers['X-Store-Id'] = storeId
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
   if (!res.ok) {

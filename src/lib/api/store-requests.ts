@@ -14,7 +14,7 @@ export interface StoreRequest {
   id: string
   storeName: string
   adminId: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: 'PENDING' | 'APPROVED' | 'APPROVED_PENDING_PAYMENT' | 'REJECTED'
   storefrontType: 'DEFAULT' | 'INDEPENDENT'
   enableToken: boolean
   customizationData: CustomizationData | null
@@ -26,6 +26,13 @@ export interface StoreRequest {
   createdAt: string
   updatedAt: string
   rawToken?: string
+  onboardingUrl?: string
+  paymentIntentId?: string
+  paymentAmountCents?: number
+  setupFeePaid?: boolean
+  connectOnboardingComplete?: boolean
+  stripeConnectAccountId?: string
+  connectOnboardingUrl?: string
 }
 
 export interface StoreRequestResponse {
@@ -53,4 +60,25 @@ export async function approveRequest(id: string): Promise<StoreRequest> {
 
 export async function rejectRequest(id: string, rejectReason: string): Promise<StoreRequest> {
   return put(`/store-requests/${id}/reject`, { rejectReason })
+}
+
+export interface BillingStatus {
+  status: string
+  setupFeePaid: boolean
+  setupFeePaymentIntentId: string | null
+  connectOnboardingComplete: boolean
+  stripeConnectAccountId: string | null
+  connectOnboardingUrl: string | null
+}
+
+export async function getBillingStatus(id: string): Promise<BillingStatus> {
+  return get(`/store-requests/${id}/billing-status`)
+}
+
+export async function refreshOnboardingLink(id: string): Promise<{ onboardingUrl: string }> {
+  return post(`/store-requests/${id}/refresh-onboarding-link`, {})
+}
+
+export async function forceActivate(id: string): Promise<{ success: boolean; status: string }> {
+  return post(`/store-requests/${id}/force-activate`, {})
 }

@@ -5,6 +5,11 @@
   import { Toaster } from 'svelte-sonner'
   import { t, getLocale, setLocale } from '$lib/i18n/locale.svelte'
   import LanguageSwitcher from '$lib/i18n/LanguageSwitcher.svelte'
+  import { StoreContext, setStoreContext } from '$lib/stores/store-context.svelte'
+  import StoreSelector from '$lib/components/StoreSelector.svelte'
+
+  const storeCtx = new StoreContext()
+  setStoreContext(storeCtx)
 
   let { children, data } = $props()
 
@@ -27,6 +32,9 @@
     } catch {}
 
     user = currentUser
+    if (currentUser) {
+      storeCtx.init(currentUser.role!)
+    }
     if (!currentUser && page.url.pathname !== '/login' && page.url.pathname !== '/') {
       window.location.href = '/login'
     }
@@ -74,6 +82,7 @@
       <div class="h-16 flex items-center px-6 font-bold text-lg border-b border-gray-200 dark:border-gray-800 shrink-0">
         <a href="/admin" class="text-gray-900 dark:text-gray-100">{t('nav.brand')}</a>
       </div>
+      <StoreSelector />
       <nav class="flex-1 py-4 overflow-y-auto">
         {#each navItems as item}
           <a

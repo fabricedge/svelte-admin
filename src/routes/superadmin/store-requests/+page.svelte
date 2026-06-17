@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getAllRequests, approveRequest, rejectRequest, type StoreRequest } from '$lib/api/store-requests'
+  import { getAllRequests, approveRequest, rejectRequest, getBillingStatus, refreshOnboardingLink, forceActivate, type StoreRequest } from '$lib/api/store-requests'
   import { toast } from 'svelte-sonner'
   import { t } from '$lib/i18n/locale.svelte'
 
@@ -17,12 +17,15 @@
   let showSuccessModal = $state(false)
   let successData = $state<{ storeName: string; deploymentUrl?: string; rawToken?: string } | null>(null)
 
+  let billingStatuses = $state<Record<string, { setupFeePaid: boolean; connectOnboardingComplete: boolean; connectOnboardingUrl: string | null; stripeConnectAccountId: string | null }>>({})
+  let billingLoading = $state<Record<string, boolean>>({})
+
   onMount(() => load())
 
-  async function load() {
+  async function load(status?: string) {
     loading = true
     try {
-      requests = await getAllRequests(filter || undefined)
+      requests = await getAllRequests(status || filter || undefined)
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -30,9 +33,10 @@
     }
   }
 
-  $effect(() => {
-    if (!loading) load()
-  })
+  function setFilter(value: string) {
+    filter = value
+    load(value || undefined)
+  }
 
   let filtered = $derived(
     (filter ? requests.filter((r) => r.status === filter) : requests)
@@ -43,7 +47,11 @@
     processing = req.id
     try {
       const result: any = await approveRequest(req.id)
-      if (result.rawToken || result.store?.deploymentUrl) {
+      if (result.status === 'APPROVED_PENDING_PAYMENT') {
+        await load()
+        await loadBillingStatus(req.id)
+        toast.success(t('storeRequests.billingPending'))
+      } else if (result.rawToken || result.store?.deploymentUrl) {
         successData = {
           storeName: req.storeName,
           deploymentUrl: result.store?.deploymentUrl,
@@ -52,6 +60,64 @@
         showSuccessModal = true
       } else {
         toast.success(t('storeRequests.approved'))
+      }
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      processing = null
+    }
+  }
+
+  async function loadBillingStatus(id: string) {
+    billingLoading[id] = true
+    try {
+      const status = await getBillingStatus(id)
+      billingStatuses[id] = {
+        setupFeePaid: status.setupFeePaid,
+        connectOnboardingComplete: status.connectOnboardingComplete,
+        connectOnboardingUrl: status.connectOnboardingUrl,
+        stripeConnectAccountId: status.stripeConnectAccountId,
+      }
+    } catch {}
+    billingLoading[id] = false
+  }
+
+  async function copyToClipboard(text: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(t('storeRequests.copied'))
+    } catch {
+      const el = document.createElement('textarea')
+      el.value = text
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      toast.success(t('storeRequests.copied'))
+    }
+  }
+
+  async function handleRefreshOnboarding(req: StoreRequest) {
+    processing = req.id
+    try {
+      const result = await refreshOnboardingLink(req.id)
+      await loadBillingStatus(req.id)
+      await copyToClipboard(result.onboardingUrl)
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      processing = null
+    }
+  }
+
+  async function handleForceActivate(req: StoreRequest) {
+    processing = req.id
+    try {
+      const result = await forceActivate(req.id)
+      if (result.success) {
+        toast.success(t('storeRequests.activated'))
+      } else {
+        toast.error(t('storeRequests.activationFailed'))
       }
       await load()
     } catch (err: any) {
@@ -85,12 +151,14 @@
 
   function statusClass(status: string) {
     if (status === 'APPROVED') return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+    if (status === 'APPROVED_PENDING_PAYMENT') return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
     if (status === 'REJECTED') return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
     return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
   }
 
   function statusLabel(status: string) {
-    return t(`storeRequests.status.${status.toLowerCase() as 'pending' | 'approved' | 'rejected'}`)
+    const key = status.toLowerCase() as 'pending' | 'approved' | 'rejected' | 'approved_pending_payment'
+    return t(`storeRequests.status.${key}`)
   }
 </script>
 
@@ -103,31 +171,37 @@
 
 <div class="mb-4 flex gap-2 flex-wrap">
   <button
-    onclick={() => filter = ''}
+    onclick={() => setFilter('')}
     class="px-3 py-1.5 text-sm rounded-md border {!filter ? 'bg-black text-white border-black' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
   >
     {t('storeRequests.allRequests')}
   </button>
   <button
-    onclick={() => filter = 'PENDING'}
+    onclick={() => setFilter('PENDING')}
     class="px-3 py-1.5 text-sm rounded-md border {filter === 'PENDING' ? 'bg-black text-white border-black' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
   >
     {t('storeRequests.filterPending')}
   </button>
   <button
-    onclick={() => filter = 'APPROVED'}
+    onclick={() => setFilter('APPROVED')}
     class="px-3 py-1.5 text-sm rounded-md border {filter === 'APPROVED' ? 'bg-black text-white border-black' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
   >
     {t('storeRequests.filterApproved')}
   </button>
   <button
-    onclick={() => filter = 'REJECTED'}
+    onclick={() => setFilter('APPROVED_PENDING_PAYMENT')}
+    class="px-3 py-1.5 text-sm rounded-md border {filter === 'APPROVED_PENDING_PAYMENT' ? 'bg-blue-700 text-white border-blue-700' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+  >
+    {t('storeRequests.filterPendingPayment')}
+  </button>
+  <button
+    onclick={() => setFilter('REJECTED')}
     class="px-3 py-1.5 text-sm rounded-md border {filter === 'REJECTED' ? 'bg-black text-white border-black' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
   >
     {t('storeRequests.filterRejected')}
   </button>
   <button
-    onclick={() => { customOnly = !customOnly; filter = '' }}
+    onclick={() => { setFilter(''); customOnly = !customOnly }}
     class="px-3 py-1.5 text-sm rounded-md border {customOnly ? 'bg-purple-700 text-white border-purple-700' : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
   >
     {t('storeRequests.filterCustom')}
@@ -239,6 +313,60 @@
                     class="px-3 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
                   >
                     {t('storeRequests.reject')}
+                  </button>
+                </div>
+              {:else if req.status === 'APPROVED_PENDING_PAYMENT'}
+                <div class="flex flex-col items-end gap-1.5">
+                  {#if billingStatuses[req.id]}
+                    <div class="flex items-center gap-2 text-xs mb-1">
+                      <span class={billingStatuses[req.id].setupFeePaid ? 'text-green-600' : 'text-yellow-600'}>
+                        {billingStatuses[req.id].setupFeePaid ? '✅ R$3 pago' : '⏳ R$3 pendente'}
+                      </span>
+                      <span class={billingStatuses[req.id].connectOnboardingComplete ? 'text-green-600' : 'text-yellow-600'}>
+                        {billingStatuses[req.id].connectOnboardingComplete ? '✅ Onboarding' : '⏳ Onboarding'}
+                      </span>
+                    </div>
+                    {#if !billingStatuses[req.id].setupFeePaid && req.paymentIntentId}
+                      <button
+                        onclick={() => copyToClipboard(req.paymentIntentId!)}
+                        class="px-2 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        {t('storeRequests.copyPaymentId')}
+                      </button>
+                    {/if}
+                    {#if !billingStatuses[req.id].connectOnboardingComplete && billingStatuses[req.id].connectOnboardingUrl}
+                      <button
+                        onclick={() => copyToClipboard(billingStatuses[req.id].connectOnboardingUrl!)}
+                        class="px-2 py-1 text-xs bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                      >
+                        {t('storeRequests.copyOnboardingLink')}
+                      </button>
+                    {/if}
+                    {#if billingStatuses[req.id].connectOnboardingUrl}
+                      <button
+                        onclick={() => handleRefreshOnboarding(req)}
+                        disabled={processing === req.id}
+                        class="px-2 py-1 text-xs bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
+                      >
+                        {processing === req.id ? '...' : t('storeRequests.refreshOnboarding')}
+                      </button>
+                    {/if}
+                  {:else if billingLoading[req.id]}
+                    <span class="text-xs text-gray-500">{t('storeRequests.loading')}</span>
+                  {:else}
+                    <button
+                      onclick={() => loadBillingStatus(req.id)}
+                      class="px-2 py-1 text-xs bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      {t('storeRequests.checkStatus')}
+                    </button>
+                  {/if}
+                  <button
+                    onclick={() => handleForceActivate(req)}
+                    disabled={processing === req.id}
+                    class="px-2 py-1 text-xs bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {processing === req.id ? '...' : t('storeRequests.forceActivate')}
                   </button>
                 </div>
               {:else if req.status === 'APPROVED' && req.store}
