@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { page } from '$app/state'
   import { createProduct, listCategories } from '$lib/api/products'
   import { toast } from 'svelte-sonner'
   import ImageGallery from '$lib/components/ImageGallery.svelte'
@@ -74,7 +75,7 @@
             <option value={cat}>{cat}</option>
           {/each}
         </select>
-        <a href="/admin/categories" class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50">+</a>
+        <a href={`/admin/${page.params.slug}/categories`} class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50">+</a>
       </div>
     </div>
     <div>

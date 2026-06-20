@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { page } from '$app/state'
   import { listOrders, bulkUpdateOrderStatus } from '$lib/api/orders'
   import { toast } from 'svelte-sonner'
   import ConfirmModal from '$lib/components/ConfirmModal.svelte'
@@ -205,7 +206,7 @@
             </td>
             <td class="px-4 py-3 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString(localeMap[getLocale()] || 'pt-BR')}</td>
             <td class="px-4 py-3 text-right">
-              <a href="/admin/orders/{order.id}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('common.details')}</a>
+              <a href={`/admin/${page.params.slug}/orders/${order.id}`} class="text-blue-600 dark:text-blue-400 hover:underline">{t('common.details')}</a>
             </td>
           </tr>
         {/each}

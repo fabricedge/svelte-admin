@@ -1,5 +1,6 @@
 import { getContext, setContext } from 'svelte'
 import { getStores, type Store, getBranding, type Branding } from '$lib/api/stores'
+import { goto } from '$app/navigation'
 
 const STORE_KEY = Symbol('store-context')
 
@@ -15,15 +16,24 @@ export class StoreContext {
     if (initialStore) this.currentStore = initialStore
   }
 
-  async init(userRole: string) {
+  async init(userRole: string, slug?: string) {
     this.isSuperAdmin = userRole === 'SUPER_ADMIN'
     try {
       const data = await getStores()
       this.stores = data
-      const savedId = this.loadSavedStoreId()
       if (data.length > 0) {
-        const saved = savedId ? data.find((s) => s.id === savedId) : null
-        this.currentStore = saved || data[0]
+        if (slug) {
+          const match = data.find((s) => s.slug === slug)
+          if (match) {
+            this.currentStore = match
+          } else {
+            const savedId = this.loadSavedStoreId()
+            this.currentStore = (savedId ? data.find((s) => s.id === savedId) : data[0]) || data[0]
+          }
+        } else {
+          const savedId = this.loadSavedStoreId()
+          this.currentStore = (savedId ? data.find((s) => s.id === savedId) : data[0]) || data[0]
+        }
       }
       if (this.currentStore) {
         this.saveStoreId(this.currentStore.id)
@@ -36,10 +46,19 @@ export class StoreContext {
     }
   }
 
-  async switchStore(store: Store) {
+  async switchStore(store: Store, currentPath?: string) {
     this.currentStore = store
     this.saveStoreId(store.id)
     await this.loadBranding(store.id)
+    if (currentPath) {
+      const parts = currentPath.split('/')
+      if (parts.length >= 4) {
+        parts[2] = store.slug
+        goto(parts.join('/'), { replaceState: true })
+      }
+    } else {
+      goto(`/admin/${store.slug}/stores`, { replaceState: true })
+    }
   }
 
   private saveStoreId(id: string) {
@@ -62,6 +81,14 @@ export class StoreContext {
   canManageStores(): boolean {
     return this.isSuperAdmin || this.multiStoreEnabled
   }
+}
+
+export function setStoreContext(ctx: StoreContext) {
+  setContext(STORE_KEY, ctx)
+}
+
+export function getStoreContext(): StoreContext {
+  return getContext<StoreContext>(STORE_KEY)
 }
 
 export function setStoreContext(ctx: StoreContext) {

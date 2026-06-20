@@ -117,7 +117,7 @@
       class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-900 dark:text-gray-300 w-48 lg:w-64"
     />
     <button onclick={handleExportCSV} class="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">{t('common.csv')}</button>
-    <a href="/admin/products/new" class="px-4 py-2 bg-black text-white rounded-md text-sm">{t('products.addProduct')}</a>
+    <a href={`/admin/${page.params.slug}/products/new`} class="px-4 py-2 bg-black text-white rounded-md text-sm">{t('products.addProduct')}</a>
   </div>
 </div>
 
@@ -154,7 +154,7 @@
             </td>
             <td class="px-4 py-3 text-right space-x-2">
               <button onclick={() => handleDuplicate(product.id)} class="text-gray-600 dark:text-gray-400 hover:underline text-xs">{t('products.duplicate')}</button>
-              <a href="/admin/products/{product.id}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('products.editProduct')}</a>
+              <a href={`/admin/${page.params.slug}/products/${product.id}`} class="text-blue-600 dark:text-blue-400 hover:underline">{t('products.editProduct')}</a>
               <button onclick={() => { deleteTarget = product.id }} class="text-red-600 hover:underline">{t('products.deleteProduct')}</button>
             </td>
           </tr>

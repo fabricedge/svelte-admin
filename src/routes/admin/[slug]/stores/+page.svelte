@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { page } from '$app/state'
   import { getStores } from '$lib/api/stores'
   import { submitStoreRequest, getMyRequests, type StoreRequest } from '$lib/api/store-requests'
   import { toast } from 'svelte-sonner'
@@ -15,6 +16,8 @@
   let storefrontType = $state<'DEFAULT' | 'INDEPENDENT'>('DEFAULT')
   let enableToken = $state(false)
   let submitting = $state(false)
+
+  let lastSubmitResult = $state<StoreRequest | null>(null)
 
   let slug = $derived(storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja')
 
@@ -43,6 +46,7 @@
         storefrontType,
         enableToken,
       )
+      lastSubmitResult = result
       toast.success(t('storeRequests.submitted'))
       storeName = ''
       adminNotes = ''
@@ -133,6 +137,35 @@
   </form>
 {/if}
 
+{#if lastSubmitResult && lastSubmitResult.stripeConnectAccountId && lastSubmitResult.paymentAmountCents}
+  <div class="mb-8 p-6 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20">
+    <h3 class="text-lg font-semibold mb-1">{t('storeRequests.submittedIndependent')}</h3>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+      {lastSubmitResult.storeName} → {lastSubmitResult.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja'}.fskk.site
+    </p>
+    <div class="space-y-4 text-sm">
+      <div>
+        <p class="font-medium mb-1">{t('storeRequests.paySetupFee')}</p>
+        <p class="text-gray-600 dark:text-gray-400 mb-2">{t('storeRequests.paySetupFeeDesc')}</p>
+        {#if lastSubmitResult.paymentLink}
+          <a href={lastSubmitResult.paymentLink} target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">{t('storeRequests.paySetupFee')} →</a>
+        {:else}
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500">{t('storeRequests.paymentId')}</span>
+            <code class="px-2 py-1 bg-white dark:bg-gray-800 rounded border text-xs font-mono select-all">{lastSubmitResult!.paymentIntentId}</code>
+            <button onclick={() => { navigator.clipboard.writeText(lastSubmitResult!.paymentIntentId!); toast.success(t('storeRequests.copied')) }} class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">{t('storeRequests.copyPaymentId')}</button>
+          </div>
+        {/if}
+      </div>
+      <div>
+        <p class="font-medium mb-1">{t('storeRequests.completeOnboarding')}</p>
+        <p class="text-gray-600 dark:text-gray-400 mb-2">{t('storeRequests.completeOnboardingDesc')}</p>
+        <a href={lastSubmitResult.connectOnboardingUrl} target="_blank" rel="noopener noreferrer" class="inline-block px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">{t('storeRequests.openOnboarding')}</a>
+      </div>
+    </div>
+  </div>
+{/if}
+
 {#if loading}
   <div class="space-y-3">
     {#each [1,2,3] as _}
@@ -172,7 +205,10 @@
           <tbody>
             {#each stores as store}
               <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td class="px-4 py-3 font-medium">{store.name}</td>
+                <td class="px-4 py-3">
+                  <p class="font-medium">{store.name}</p>
+                  <p class="text-xs text-gray-500">{store.slug}{store.storefrontType === 'INDEPENDENT' ? '.fskk.site' : ''}</p>
+                </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium {store.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
                     {store.isActive ? t('superadmin.storesPage.active') : t('superadmin.storesPage.inactive')}
@@ -188,7 +224,7 @@
                   {/if}
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <a href="/admin/settings" class="text-blue-600 hover:underline text-xs">{t('storeRequests.viewStore')}</a>
+                  <a href={`/admin/${page.params.slug}/settings`} class="text-blue-600 hover:underline text-xs">{t('storeRequests.viewStore')}</a>
                 </td>
               </tr>
             {/each}
@@ -213,7 +249,10 @@
           <tbody>
             {#each requests as req}
               <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td class="px-4 py-3 font-medium">{req.storeName}</td>
+                <td class="px-4 py-3">
+                  <p class="font-medium">{req.storeName}</p>
+                  <p class="text-xs text-gray-500">{req.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja'}.fskk.site</p>
+                </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {statusClass(req.status)}">
                     {statusLabel(req.status)}

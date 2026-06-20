@@ -142,7 +142,7 @@
               <td class="px-6 py-3 font-medium {statusClass(order.status)}">{statusLabel(order.status)}</td>
               <td class="px-6 py-3">{new Date(order.createdAt).toLocaleDateString()}</td>
               <td class="px-6 py-3 text-right">
-                <a href="/admin/orders/{order.id}" class="text-blue-600 hover:underline">{t('customers.detail.details')}</a>
+                <a href={`/admin/${page.params.slug}/orders/${order.id}`} class="text-blue-600 hover:underline">{t('customers.detail.details')}</a>
               </td>
             </tr>
           {/each}

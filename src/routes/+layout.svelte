@@ -33,7 +33,7 @@
 
     user = currentUser
     if (currentUser) {
-      storeCtx.init(currentUser.role!)
+      storeCtx.init(currentUser.role!, page.params.slug)
     }
     if (!currentUser && page.url.pathname !== '/login' && page.url.pathname !== '/') {
       window.location.href = '/login'
@@ -57,15 +57,17 @@
     window.location.href = '/login'
   }
 
+  let s = $derived(page.params.slug || storeCtx.currentStore?.slug || '')
+
   const navItems = [
-    { label: () => t('nav.dashboard'), href: '/admin', icon: '📊' },
-    { label: () => t('nav.orders'), href: '/admin/orders', icon: '📦' },
-    { label: () => t('nav.products'), href: '/admin/products', icon: '🏷️' },
-    { label: () => t('nav.categories'), href: '/admin/categories', icon: '📂' },
-    { label: () => t('nav.stores'), href: '/admin/stores', icon: '🏪' },
-    { label: () => t('nav.customStorefront'), href: '/admin/custom-storefront', icon: '🎨' },
-    { label: () => t('nav.customers'), href: '/admin/customers', icon: '👥' },
-    { label: () => t('nav.settings'), href: '/admin/settings', icon: '⚙️' },
+    { label: () => t('nav.dashboard'), href: () => `/admin/${s}`, icon: '📊' },
+    { label: () => t('nav.orders'), href: () => `/admin/${s}/orders`, icon: '📦' },
+    { label: () => t('nav.products'), href: () => `/admin/${s}/products`, icon: '🏷️' },
+    { label: () => t('nav.categories'), href: () => `/admin/${s}/categories`, icon: '📂' },
+    { label: () => t('nav.stores'), href: () => `/admin/${s}/stores`, icon: '🏪' },
+    { label: () => t('nav.customStorefront'), href: () => `/admin/${s}/custom-storefront`, icon: '🎨' },
+    { label: () => t('nav.customers'), href: () => `/admin/${s}/customers`, icon: '👥' },
+    { label: () => t('nav.settings'), href: () => `/admin/${s}/settings`, icon: '⚙️' },
   ]
 
   const isSuperAdmin = $derived(user?.role === 'SUPER_ADMIN')
@@ -86,10 +88,10 @@
       <nav class="flex-1 py-4 overflow-y-auto">
         {#each navItems as item}
           <a
-            href={item.href}
+            href={item.href()}
             onclick={() => { sidebarOpen = false }}
             class="flex items-center gap-3 px-6 py-2.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-            class:font-medium={page.url.pathname.startsWith(item.href)}
+            class:font-medium={page.url.pathname.startsWith(item.href())}
           >
             <span>{item.icon}</span>
             {item.label()}

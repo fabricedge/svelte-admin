@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { page } from '$app/state'
   import { listCategories, deleteCategory } from '$lib/api/products'
   import { toast } from 'svelte-sonner'
   import ConfirmModal from '$lib/components/ConfirmModal.svelte'
@@ -75,7 +76,7 @@
             <td class="px-4 py-3 font-medium dark:text-gray-300">{cat.name}</td>
             <td class="px-4 py-3 dark:text-gray-300">{cat.productCount}</td>
             <td class="px-4 py-3 text-right space-x-2">
-              <a href="/admin/products?category={cat.name}" class="text-blue-600 dark:text-blue-400 hover:underline">{t('categories.viewProducts')}</a>
+              <a href={`/admin/${page.params.slug}/products?category=${cat.name}`} class="text-blue-600 dark:text-blue-400 hover:underline">{t('categories.viewProducts')}</a>
               <button onclick={() => { deleteTarget = cat }} class="text-red-600 hover:underline">{t('products.deleteProduct')}</button>
             </td>
           </tr>

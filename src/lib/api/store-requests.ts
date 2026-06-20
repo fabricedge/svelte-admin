@@ -28,6 +28,7 @@ export interface StoreRequest {
   rawToken?: string
   onboardingUrl?: string
   paymentIntentId?: string
+  paymentLink?: string | null
   paymentAmountCents?: number
   setupFeePaid?: boolean
   connectOnboardingComplete?: boolean

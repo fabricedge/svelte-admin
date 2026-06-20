@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page as pageState } from '$app/state'
   import { onMount } from 'svelte'
   import { listUsers } from '$lib/api/users'
   import { exportCSV } from '$lib/utils/csv'
@@ -90,7 +91,7 @@
             <td class="px-4 py-3">{customer.role}</td>
             <td class="px-4 py-3">{new Date(customer.createdAt).toLocaleDateString()}</td>
             <td class="px-4 py-3 text-right">
-              <a href="/admin/customers/{customer.id}" class="text-blue-600 hover:underline">{t('customers.detail.details')}</a>
+              <a href={`/admin/${pageState.params.slug}/customers/${customer.id}`} class="text-blue-600 hover:underline">{t('customers.detail.details')}</a>
             </td>
           </tr>
         {/each}
