@@ -8,7 +8,6 @@
   let loading = $state(true)
   let activeTab = $state<'form' | 'requests'>('form')
 
-  // Form fields
   let storeName = $state('')
   let domain = $state('')
   let primaryColor = $state('#000000')
@@ -54,7 +53,6 @@
       )
       lastSubmitResult = result
       toast.success(t('customStorefront.submitted'))
-      // Reset form
       storeName = ''
       domain = ''
       primaryColor = '#000000'
@@ -74,16 +72,18 @@
   }
 
   let customRequests = $derived(
-    requests.filter((r) => r.storefrontType === 'INDEPENDENT' && r.customizationData)
+    requests.filter((r) => r.customizationData && Object.keys(r.customizationData).length > 0)
   )
 
   function statusLabel(status: string) {
-    return t(`storeRequests.status.${status.toLowerCase() as 'pending' | 'approved' | 'rejected'}`)
+    const key = status.toLowerCase().replace(/_/g, '')
+    return t(`storeRequests.status.${key}`)
   }
 
   function statusClass(status: string) {
     if (status === 'APPROVED') return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
     if (status === 'REJECTED') return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+    if (status === 'APPROVED_PENDING_PAYMENT') return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
     return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
   }
 </script>
@@ -91,6 +91,12 @@
 <div class="max-w-2xl">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">{t('customStorefront.title')}</h1>
+  </div>
+
+  <div class="mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+    <p class="text-sm text-blue-700 dark:text-blue-300">
+      {t('customStorefront.planNotice')}
+    </p>
   </div>
 
   <div class="mb-4 flex gap-4 border-b border-gray-200 dark:border-gray-800">
@@ -129,6 +135,7 @@
           placeholder="ex: minhaloja.com.br"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 dark:text-gray-100"
         />
+        <p class="text-xs text-gray-400 mt-1">{t('storeRequests.customDomainPlanNotice')}</p>
       </div>
 
       <div>

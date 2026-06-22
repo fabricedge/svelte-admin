@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { page } from '$app/state'
   import { getStores } from '$lib/api/stores'
-  import { submitStoreRequest, getMyRequests, type StoreRequest } from '$lib/api/store-requests'
+  import { submitStoreRequest, getMyRequests, generatePaymentLink, type StoreRequest } from '$lib/api/store-requests'
   import { toast } from 'svelte-sonner'
   import { t } from '$lib/i18n/locale.svelte'
 
@@ -12,8 +12,8 @@
 
   let showForm = $state(false)
   let storeName = $state('')
+  let domain = $state('')
   let adminNotes = $state('')
-  let storefrontType = $state<'DEFAULT' | 'INDEPENDENT'>('DEFAULT')
   let enableToken = $state(false)
   let submitting = $state(false)
 
@@ -40,17 +40,21 @@
     if (!storeName.trim()) return
     submitting = true
     try {
+      const cd: Record<string, string> = {}
+      if (domain.trim()) cd.domain = domain.trim()
+
       const result = await submitStoreRequest(
         storeName.trim(),
         adminNotes.trim() || undefined,
-        storefrontType,
+        'INDEPENDENT',
         enableToken,
+        Object.keys(cd).length > 0 ? cd : undefined,
       )
       lastSubmitResult = result
       toast.success(t('storeRequests.submitted'))
       storeName = ''
+      domain = ''
       adminNotes = ''
-      storefrontType = 'DEFAULT'
       enableToken = false
       showForm = false
       const r = await getMyRequests()
@@ -64,14 +68,32 @@
   }
 
   function statusLabel(status: string) {
-    const key = status.toLowerCase() as 'pending' | 'approved' | 'rejected'
+    const key = status.toLowerCase().replace(/_/g, '')
     return t(`storeRequests.status.${key}`)
   }
 
   function statusClass(status: string) {
     if (status === 'APPROVED') return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
     if (status === 'REJECTED') return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+    if (status === 'APPROVED_PENDING_PAYMENT') return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
     return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+  }
+
+  let generatingLink = $state<string | null>(null)
+
+  async function handleGeneratePaymentLink(reqId: string) {
+    generatingLink = reqId
+    try {
+      const result = await generatePaymentLink(reqId)
+      if (result.paymentLink) {
+        window.open(result.paymentLink, '_blank')
+        toast.success('Link de pagamento gerado!')
+      }
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      generatingLink = null
+    }
   }
 </script>
 
@@ -93,32 +115,22 @@
         required
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 dark:text-gray-100"
       />
+      <p class="text-xs text-gray-500 mt-1">{slug}.fskk.site</p>
     </div>
     <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('storeRequests.storefrontType')}</label>
-      <div class="space-y-2">
-        <label class="flex items-center gap-3 p-3 rounded-md border border-gray-200 dark:border-gray-700 cursor-pointer {storefrontType === 'DEFAULT' ? 'bg-black/5 dark:bg-white/5 border-black' : ''}">
-          <input type="radio" name="storefrontType" value="DEFAULT" bind:group={storefrontType} class="accent-black" />
-          <div>
-            <p class="text-sm font-medium">{t('storeRequests.storefrontDefault')}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">stfront.fskk.site/{slug}</p>
-          </div>
-        </label>
-        <label class="flex items-center gap-3 p-3 rounded-md border border-gray-200 dark:border-gray-700 cursor-pointer {storefrontType === 'INDEPENDENT' ? 'bg-black/5 dark:bg-white/5 border-black' : ''}">
-          <input type="radio" name="storefrontType" value="INDEPENDENT" bind:group={storefrontType} class="accent-black" />
-          <div>
-            <p class="text-sm font-medium">{t('storeRequests.storefrontIndependent')}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{slug}.fskk.site</p>
-          </div>
-        </label>
-      </div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('customStorefront.form.domain')}</label>
+      <input
+        type="text"
+        bind:value={domain}
+        placeholder="ex: minhaloja.com.br"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm bg-white dark:bg-gray-800 dark:text-gray-100"
+      />
+      <p class="text-xs text-gray-400 mt-1">{t('storeRequests.customDomainPlanNotice')}</p>
     </div>
-    {#if storefrontType === 'INDEPENDENT'}
-      <label class="flex items-center gap-2 cursor-pointer">
-        <input type="checkbox" bind:checked={enableToken} class="accent-black" />
-        <span class="text-sm text-gray-700 dark:text-gray-300">{t('storeRequests.enableToken')}</span>
-      </label>
-    {/if}
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" bind:checked={enableToken} class="accent-black" />
+      <span class="text-sm text-gray-700 dark:text-gray-300">{t('storeRequests.enableToken')}</span>
+    </label>
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('storeRequests.notes')}</label>
       <textarea
@@ -207,7 +219,7 @@
               <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td class="px-4 py-3">
                   <p class="font-medium">{store.name}</p>
-                  <p class="text-xs text-gray-500">{store.slug}{store.storefrontType === 'INDEPENDENT' ? '.fskk.site' : ''}</p>
+                  <p class="text-xs text-gray-500">{store.domain || store.slug + '.fskk.site'}</p>
                 </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium {store.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
@@ -217,10 +229,8 @@
                 <td class="px-4 py-3">
                   {#if store.deploymentUrl}
                     <a href={store.deploymentUrl} target="_blank" class="text-blue-600 hover:underline text-xs">{store.deploymentUrl}</a>
-                  {:else if store.storefrontType === 'INDEPENDENT'}
-                    <span class="text-xs text-yellow-600">{t('storeRequests.deployPending')}</span>
                   {:else}
-                    <span class="text-xs text-gray-400">{t('storeRequests.storefrontDefault')}</span>
+                    <span class="text-xs text-yellow-600">{t('storeRequests.deployPending')}</span>
                   {/if}
                 </td>
                 <td class="px-4 py-3 text-right">
@@ -244,6 +254,7 @@
               <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('storeRequests.table.status')}</th>
               <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('storeRequests.table.date')}</th>
               <th class="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('storeRequests.deploymentStatus')}</th>
+              <th class="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('storeRequests.table.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -251,7 +262,9 @@
               <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td class="px-4 py-3">
                   <p class="font-medium">{req.storeName}</p>
-                  <p class="text-xs text-gray-500">{req.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja'}.fskk.site</p>
+                  <p class="text-xs text-gray-500">
+                    {req.customizationData?.domain || req.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'loja'}.fskk.site
+                  </p>
                 </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {statusClass(req.status)}">
@@ -266,18 +279,45 @@
                 </td>
                 <td class="px-4 py-3 text-gray-500 text-xs">{new Date(req.createdAt).toLocaleDateString()}</td>
                 <td class="px-4 py-3">
-                  {#if req.storefrontType === 'INDEPENDENT'}
-                    {#if req.store?.deploymentStatus === 'READY' && req.store?.deploymentUrl}
-                      <a href={req.store.deploymentUrl} target="_blank" class="text-blue-600 hover:underline text-xs">{req.store.deploymentUrl}</a>
-                    {:else if req.store?.deploymentStatus === 'FAILED'}
-                      <span class="text-xs text-red-600">{t('storeRequests.deployFailed')}</span>
-                    {:else if req.store?.deploymentStatus === 'DEPLOYING'}
-                      <span class="text-xs text-yellow-600">{t('storeRequests.deployDeploying')}</span>
-                    {:else}
-                      <span class="text-xs text-gray-500">{t('storeRequests.deployPending')}</span>
-                    {/if}
+                  {#if req.store?.deploymentStatus === 'READY' && req.store?.deploymentUrl}
+                    <a href={req.store.deploymentUrl} target="_blank" class="text-blue-600 hover:underline text-xs">{req.store.deploymentUrl}</a>
+                  {:else if req.store?.deploymentStatus === 'FAILED'}
+                    <span class="text-xs text-red-600">{t('storeRequests.deployFailed')}</span>
+                  {:else if req.store?.deploymentStatus === 'DEPLOYING'}
+                    <span class="text-xs text-yellow-600">{t('storeRequests.deployDeploying')}</span>
                   {:else}
-                    <span class="text-xs text-gray-400">{t('storeRequests.storefrontDefault')}</span>
+                    <span class="text-xs text-gray-500">{t('storeRequests.deployPending')}</span>
+                  {/if}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  {#if req.status === 'APPROVED_PENDING_PAYMENT'}
+                    <div class="flex flex-col items-end gap-1">
+                      <button
+                        onclick={() => handleGeneratePaymentLink(req.id)}
+                        disabled={generatingLink === req.id}
+                        class="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {generatingLink === req.id ? t('common.saving') : t('storeRequests.paySetupFee')} →
+                      </button>
+                      {#if req.setupFeePaymentIntentId}
+                        <button
+                          onclick={() => { navigator.clipboard.writeText(req.setupFeePaymentIntentId!); toast.success(t('storeRequests.copied')) }}
+                          class="text-xs text-blue-600 hover:underline"
+                        >
+                          {t('storeRequests.copyPaymentId')}
+                        </button>
+                      {/if}
+                      {#if req.connectOnboardingUrl}
+                        <a
+                          href={req.connectOnboardingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-xs text-purple-600 hover:underline"
+                        >
+                          {t('storeRequests.openOnboarding')}
+                        </a>
+                      {/if}
+                    </div>
                   {/if}
                 </td>
               </tr>

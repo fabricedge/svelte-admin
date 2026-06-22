@@ -30,6 +30,7 @@ export interface StoreRequest {
   paymentIntentId?: string
   paymentLink?: string | null
   paymentAmountCents?: number
+  setupFeePaymentIntentId?: string | null
   setupFeePaid?: boolean
   connectOnboardingComplete?: boolean
   stripeConnectAccountId?: string
@@ -82,4 +83,8 @@ export async function refreshOnboardingLink(id: string): Promise<{ onboardingUrl
 
 export async function forceActivate(id: string): Promise<{ success: boolean; status: string }> {
   return post(`/store-requests/${id}/force-activate`, {})
+}
+
+export async function generatePaymentLink(id: string): Promise<{ paymentLink: string; paymentIntentId: string | null; paymentAmountCents: number }> {
+  return post(`/store-requests/${id}/generate-payment-link`, {})
 }
