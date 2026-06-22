@@ -48,7 +48,7 @@
       description: () => t('billing.plans.branding.description'),
       price: () => t('billing.plans.branding.price'),
       priceSuffix: () => t('billing.plans.branding.priceSuffix'),
-      setupFee: null,
+      setupFee: () => t('billing.plans.branding.setupFee'),
       features: [
         { key: 'everythingInMonthly', included: true },
         { key: 'customBranding', included: true },
@@ -56,7 +56,7 @@
       ctaLabel: () => t('billing.cta.requestBranding'),
       href: `/admin/${s}/custom-storefront`,
       highlighted: false,
-      badge: () => t('billing.plans.branding.requires'),
+      badge: null,
       vars: { slug: s },
     },
   ]

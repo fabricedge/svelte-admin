@@ -85,15 +85,23 @@
 
   function handleExportCSV() {
     const locale = localeMap[getLocale()] || 'pt-BR'
-    exportCSV(t('orders.title'), [t('orders.table.order'), t('orders.table.customer'), t('orders.table.total'), t('orders.table.status'), t('orders.table.date')],
+    exportCSV(t('orders.title'), [t('orders.table.order'), t('orders.table.email'), t('orders.table.total'), t('orders.table.status'), t('orders.table.date')],
       orders.map((o) => [
         o.id,
-        o.user?.email || '-',
+        redactEmail(o.user?.email),
         formatPrice(o.total),
         statusLabel(o.status),
-        new Date(o.createdAt).toLocaleDateString(locale),
+        new Date(o.createdAt).toLocaleString(locale),
       ])
     )
+  }
+
+  function redactEmail(email: string | undefined | null) {
+    if (!email) return '-'
+    const parts = email.split('@')
+    if (parts.length !== 2) return email
+    const name = parts[0]
+    return name[0] + '***@' + parts[1]
   }
 
   function formatPrice(cents: number) {
@@ -182,7 +190,7 @@
             <input type="checkbox" checked={selectedIds.size === orders.length && orders.length > 0} onchange={toggleSelectAll} class="rounded dark:bg-gray-700" />
           </th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.order')}</th>
-          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.customer')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.email')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.total')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.status')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('orders.table.date')}</th>
@@ -196,7 +204,7 @@
               <input type="checkbox" checked={selectedIds.has(order.id)} onchange={() => toggleSelect(order.id)} class="rounded dark:bg-gray-700" />
             </td>
             <td class="px-4 py-3 font-mono text-xs dark:text-gray-300">{order.id.slice(0, 12)}...</td>
-            <td class="px-4 py-3 dark:text-gray-300">{order.user?.email?.split('@')[0] || '-'}</td>
+            <td class="px-4 py-3 dark:text-gray-300 truncate max-w-[200px]">{redactEmail(order.user?.email)}</td>
             <td class="px-4 py-3 dark:text-gray-300">{formatPrice(order.total)}</td>
             <td class="px-4 py-3">
               <span class="inline-flex items-center gap-1.5 font-medium {statusClass(order.status)}">
@@ -204,7 +212,7 @@
                 {statusLabel(order.status)}
               </span>
             </td>
-            <td class="px-4 py-3 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString(localeMap[getLocale()] || 'pt-BR')}</td>
+            <td class="px-4 py-3 dark:text-gray-300 whitespace-nowrap">{new Date(order.createdAt).toLocaleString(localeMap[getLocale()] || 'pt-BR')}</td>
             <td class="px-4 py-3 text-right">
               <a href={`/admin/${page.params.slug}/orders/${order.id}`} class="text-blue-600 dark:text-blue-400 hover:underline">{t('common.details')}</a>
             </td>

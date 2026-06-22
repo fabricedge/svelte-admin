@@ -90,11 +90,3 @@ export function setStoreContext(ctx: StoreContext) {
 export function getStoreContext(): StoreContext {
   return getContext<StoreContext>(STORE_KEY)
 }
-
-export function setStoreContext(ctx: StoreContext) {
-  setContext(STORE_KEY, ctx)
-}
-
-export function getStoreContext(): StoreContext {
-  return getContext<StoreContext>(STORE_KEY)
-}

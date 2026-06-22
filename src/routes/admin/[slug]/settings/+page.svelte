@@ -15,6 +15,14 @@
     { key: 'store_locale', label: () => t('settings.fieldLabels.store_locale'), type: 'text' },
   ]
 
+  const brandingFields = [
+    { key: 'branding_primary_color', label: () => t('settings.branding.primaryColor'), type: 'color' },
+    { key: 'branding_secondary_color', label: () => t('settings.branding.secondaryColor'), type: 'color' },
+    { key: 'branding_logo', label: () => t('settings.branding.logo'), type: 'text' },
+    { key: 'branding_favicon', label: () => t('settings.branding.favicon'), type: 'text' },
+    { key: 'branding_font', label: () => t('settings.branding.font'), type: 'text' },
+  ]
+
   onMount(async () => {
     try {
       const data = await getSettings()
@@ -54,6 +62,20 @@
 {:else}
   <form onsubmit={handleSubmit} class="max-w-lg space-y-5">
     {#each defaultSettings as field}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{field.label()}</label>
+        <input
+          type={field.type}
+          value={getValue(field.key)}
+          oninput={(e) => setValue(field.key, (e.target as HTMLInputElement).value)}
+          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+        />
+      </div>
+    {/each}
+
+    <h2 class="text-lg font-semibold pt-4 border-t border-gray-200">{t('settings.branding.sectionTitle')}</h2>
+
+    {#each brandingFields as field}
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">{field.label()}</label>
         <input

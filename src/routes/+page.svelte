@@ -12,9 +12,6 @@
       <p class="mt-4 text-xl text-gray-600 dark:text-gray-400">
         {t('landing.subtitle')}
       </p>
-      <p class="mx-auto mt-6 max-w-2xl text-base text-gray-500 dark:text-gray-400 leading-relaxed">
-        {t('landing.description')}
-      </p>
       <div class="mt-10 flex items-center justify-center gap-4">
         <a
           href={isAuthenticated() ? '/admin' : '/login'}
