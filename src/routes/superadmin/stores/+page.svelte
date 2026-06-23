@@ -1,19 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
   import { createStore, updateStore, updateStoreDomain, type Store } from '$lib/api/stores'
   import { toast } from 'svelte-sonner'
   import { t } from '$lib/i18n/locale.svelte'
 
   const ctx = getStoreContext()
-
-  let stores = $state<Store[]>([])
-  let loading = $state(true)
-
-  onMount(() => {
-    stores = ctx.stores
-    loading = false
-  })
 
   let showNewForm = $state(false)
   let newStoreName = $state('')
@@ -24,7 +15,7 @@
     creating = true
     try {
       const store = await createStore(newStoreName.trim())
-      stores = [...stores, store]
+      ctx.stores = [...ctx.stores, store]
       newStoreName = ''
       showNewForm = false
       toast.success(t('superadmin.storesPage.created'))
@@ -42,7 +33,7 @@
     if (!domainInput.trim()) return
     try {
       const updated = await updateStoreDomain(storeId, domainInput.trim())
-      stores = stores.map((s) => s.id === storeId ? { ...s, domain: updated.domain } : s)
+      ctx.stores = ctx.stores.map((s) => s.id === storeId ? { ...s, domain: updated.domain } : s)
       toast.success(t('superadmin.storesPage.domainUpdated'))
       editingDomain = null
     } catch (err: any) {
@@ -58,7 +49,7 @@
   async function toggleActive(store: Store) {
     try {
       const updated = await updateStore(store.id, { isActive: !store.isActive })
-      stores = stores.map((s) => s.id === updated.id ? updated : s)
+      ctx.stores = ctx.stores.map((s) => s.id === updated.id ? updated : s)
       toast.success(updated.isActive ? t('superadmin.storesPage.toggledOn') : t('superadmin.storesPage.toggledOff'))
     } catch (err: any) {
       toast.error(err.message)
@@ -92,7 +83,7 @@
   </form>
 {/if}
 
-{#if loading}
+{#if ctx.loading}
   <div class="space-y-3">
     {#each [1,2,3] as _}
       <div class="h-16 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
@@ -112,7 +103,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-        {#each stores as store}
+        {#each ctx.stores as store}
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50">
             <td class="px-4 py-3 font-medium">{store.name}</td>
             <td class="px-4 py-3 text-gray-500">/{store.slug}</td>
