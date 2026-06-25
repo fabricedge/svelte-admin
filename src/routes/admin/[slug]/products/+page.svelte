@@ -76,9 +76,10 @@
   }
 
   function handleExportCSV() {
-    exportCSV(t('products.title'), [t('products.table.name'), t('products.table.price'), t('products.table.category'), t('products.table.inventory')],
+    exportCSV(t('products.title'), [t('products.table.name'), t('products.table.sku'), t('products.table.price'), t('products.table.category'), t('products.table.inventory')],
       products.map((p) => [
         p.name,
+        p.sku || '-',
         formatPrice(p.price),
         p.category || '-',
         String(p.inventory),
@@ -135,6 +136,7 @@
       <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800">
         <tr>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.name')}</th>
+          <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.sku')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.price')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.category')}</th>
           <th class="text-left px-4 py-3 font-medium dark:text-gray-300">{t('products.table.inventory')}</th>
@@ -145,6 +147,7 @@
         {#each products as product}
           <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
             <td class="px-4 py-3 dark:text-gray-300">{product.name}</td>
+            <td class="px-4 py-3 dark:text-gray-300 font-mono text-xs">{product.sku || '-'}</td>
             <td class="px-4 py-3 dark:text-gray-300">{formatPrice(product.price)}</td>
             <td class="px-4 py-3 dark:text-gray-300">{product.category || '-'}</td>
             <td class="px-4 py-3">

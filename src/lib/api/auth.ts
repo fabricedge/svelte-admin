@@ -1,6 +1,7 @@
 import { post } from './index'
 
 export async function login(email: string, password: string) {
+  localStorage.removeItem('selectedStoreId')
   const data = await post('/auth/login', { email, password })
   localStorage.setItem('token', data.token)
   return data

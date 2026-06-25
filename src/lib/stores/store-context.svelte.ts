@@ -1,6 +1,5 @@
 import { getContext, setContext } from 'svelte'
 import { getStores, type Store, getBranding, type Branding } from '$lib/api/stores'
-import { goto } from '$app/navigation'
 
 const STORE_KEY = Symbol('store-context')
 
@@ -54,10 +53,10 @@ export class StoreContext {
       const parts = currentPath.split('/')
       if (parts.length >= 4) {
         parts[2] = store.slug
-        goto(parts.join('/'), { replaceState: true })
+        window.location.href = parts.join('/')
       }
     } else {
-      goto(`/admin/${store.slug}/stores`, { replaceState: true })
+      window.location.href = `/admin/${store.slug}/stores`
     }
   }
 

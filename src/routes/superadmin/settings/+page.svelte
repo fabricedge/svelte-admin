@@ -249,42 +249,46 @@
       </form>
     </section>
 
-    <!-- DHL -->
+    <!-- Origens (Shippo) -->
     <section>
-      <h2 class="text-lg font-semibold mb-4">
-        <span class="text-red-600">DHL</span> {t('superadmin.settingsPage.dhl')}
-      </h2>
-      <p class="text-xs text-gray-500 mb-3">{t('superadmin.settingsPage.dhlDesc')}</p>
+      <h2 class="text-lg font-semibold mb-4">{t('superadmin.settingsPage.shipping')}</h2>
+      <p class="text-xs text-gray-500 mb-3">{t('superadmin.settingsPage.shippingDesc')}</p>
       <form onsubmit={handleGeneralSubmit} class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.dhlFields.originZip')}</label>
-          <input
-            type="text"
-            value={getValue('dhl_origin_zip')}
-            oninput={(e) => setValue('dhl_origin_zip', (e.target as HTMLInputElement).value)}
-            placeholder={t('superadmin.settingsPage.dhlFields.zipPlaceholder')}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originName')}</label>
+          <input type="text" value={getValue('origin_name')} oninput={(e) => setValue('origin_name', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.namePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.dhlFields.originCity')}</label>
-          <input
-            type="text"
-            value={getValue('dhl_origin_city')}
-            oninput={(e) => setValue('dhl_origin_city', (e.target as HTMLInputElement).value)}
-            placeholder={t('superadmin.settingsPage.dhlFields.cityPlaceholder')}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originCompany')}</label>
+          <input type="text" value={getValue('origin_company')} oninput={(e) => setValue('origin_company', (e.target as HTMLInputElement).value)} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.dhlFields.originAddress')}</label>
-          <input
-            type="text"
-            value={getValue('dhl_origin_address')}
-            oninput={(e) => setValue('dhl_origin_address', (e.target as HTMLInputElement).value)}
-            placeholder={t('superadmin.settingsPage.dhlFields.addressPlaceholder')}
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originPhone')}</label>
+          <input type="text" value={getValue('origin_phone')} oninput={(e) => setValue('origin_phone', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.phonePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originEmail')}</label>
+          <input type="email" value={getValue('origin_email')} oninput={(e) => setValue('origin_email', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.emailPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originStreet')}</label>
+          <input type="text" value={getValue('origin_street')} oninput={(e) => setValue('origin_street', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.streetPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originCity')}</label>
+          <input type="text" value={getValue('origin_city')} oninput={(e) => setValue('origin_city', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.cityPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originState')}</label>
+          <input type="text" value={getValue('origin_state')} oninput={(e) => setValue('origin_state', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.statePlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originZip')}</label>
+          <input type="text" value={getValue('origin_zip')} oninput={(e) => setValue('origin_zip', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.zipPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{t('superadmin.settingsPage.shippingFields.originCountry')}</label>
+          <input type="text" value={getValue('origin_country')} oninput={(e) => setValue('origin_country', (e.target as HTMLInputElement).value)} placeholder={t('superadmin.settingsPage.shippingFields.countryPlaceholder')} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
         </div>
       </form>
     </section>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getAdmins, updateStorePermission } from '$lib/api/users'
+  import { getAdmins, updateStorePermission, updateUserPlan } from '$lib/api/users'
   import { getStoreContext } from '$lib/stores/store-context.svelte'
   import { toast } from 'svelte-sonner'
   import { t } from '$lib/i18n/locale.svelte'
@@ -10,6 +10,7 @@
   let users = $state<any[]>([])
   let loading = $state(true)
   let toggling = $state<string | null>(null)
+  let changingPlan = $state<string | null>(null)
 
   onMount(async () => {
     try {
@@ -36,6 +37,19 @@
       toggling = null
     }
   }
+
+  async function handlePlanChange(userId: string, plan: string) {
+    changingPlan = userId
+    try {
+      const result = await updateUserPlan(userId, plan)
+      users = users.map((u) => u.id === userId ? { ...u, plan: result.user.plan } : u)
+      toast.success('Plano atualizado!')
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      changingPlan = null
+    }
+  }
 </script>
 
 <h1 class="text-2xl font-bold mb-6">{t('superadmin.usersPage.title')}</h1>
@@ -58,6 +72,7 @@
           <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.email')}</th>
           <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.name')}</th>
           <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.type')}</th>
+          <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.plan')}</th>
           <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.canCreate')}</th>
           <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.table.stores')}</th>
         </tr>
@@ -72,6 +87,22 @@
                 <span class="rounded bg-purple-100 dark:bg-purple-900 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-300">{t('superadmin.usersPage.superAdminBadge')}</span>
               {:else}
                 <span class="text-gray-600 dark:text-gray-400">{t('superadmin.usersPage.admin')}</span>
+              {/if}
+            </td>
+            <td class="px-4 py-3">
+              {#if user.role === 'SUPER_ADMIN'}
+                <span class="text-xs text-gray-400">—</span>
+              {:else}
+                <select
+                  value={user.plan || 'FREE'}
+                  disabled={changingPlan === user.id}
+                  onchange={(e) => handlePlanChange(user.id, (e.target as HTMLSelectElement).value)}
+                  class="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 disabled:opacity-50"
+                >
+                  <option value="FREE">Grátis</option>
+                  <option value="MONTHLY">Mensal ($29)</option>
+                  <option value="CUSTOM">Personalizado</option>
+                </select>
               {/if}
             </td>
             <td class="px-4 py-3">

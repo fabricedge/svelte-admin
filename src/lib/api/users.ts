@@ -20,3 +20,7 @@ export async function getAdmins() {
 export async function updateStorePermission(userId: string, canCreateStores: boolean) {
   return put(`/users/${userId}/store-permission`, { canCreateStores })
 }
+
+export async function updateUserPlan(userId: string, plan: string) {
+  return put(`/users/${userId}/plan`, { plan })
+}

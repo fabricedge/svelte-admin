@@ -1,8 +1,20 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { t } from '$lib/i18n/locale.svelte'
   import { page } from '$app/state'
+  import { getMyUsage, type MyUsage } from '$lib/api/stores'
 
   const s = $derived(page.params.slug || '')
+
+  let usage = $state<MyUsage | null>(null)
+
+  onMount(async () => {
+    try {
+      usage = await getMyUsage()
+    } catch {}
+  })
+
+  const currentPlanId = $derived(usage?.plan.toLowerCase() || 'free')
 
   const plans = [
     {
@@ -18,6 +30,7 @@
         { key: 'orders', included: true },
         { key: 'customers', included: true },
         { key: 'shipping', included: true },
+        { key: 'storeLimit', included: true, vars: { count: 3 } },
       ],
       ctaLabel: () => t('billing.cta.currentPlan'),
       href: null,
@@ -35,11 +48,12 @@
       features: [
         { key: 'everythingInFree', included: true },
         { key: 'customDomain', included: true },
+        { key: 'storeLimit', included: true, vars: { count: 10 } },
       ],
-      ctaLabel: () => t('billing.cta.requestCustom'),
+      ctaLabel: () => currentPlanId === 'monthly' ? t('billing.cta.currentPlan') : t('billing.cta.requestCustom'),
       href: `/admin/${s}/custom-storefront`,
-      highlighted: true,
-      badge: () => t('billing.planIncludes'),
+      highlighted: currentPlanId === 'monthly' ? false : true,
+      badge: currentPlanId === 'monthly' ? null : () => t('billing.planIncludes'),
       vars: { slug: s },
     },
     {
@@ -52,8 +66,9 @@
       features: [
         { key: 'everythingInMonthly', included: true },
         { key: 'customBranding', included: true },
+        { key: 'storeLimitUnlimited', included: true },
       ],
-      ctaLabel: () => t('billing.cta.requestBranding'),
+      ctaLabel: () => currentPlanId === 'branding' || currentPlanId === 'custom' ? t('billing.cta.currentPlan') : t('billing.cta.requestBranding'),
       href: `/admin/${s}/custom-storefront`,
       highlighted: false,
       badge: null,
@@ -115,7 +130,7 @@
                   </svg>
                 </span>
               {/if}
-              <span class:line-through={!feat.included} class="text-gray-700 dark:text-gray-300">{t(`billing.features.${feat.key}`, plan.vars)}</span>
+              <span class:line-through={!feat.included} class="text-gray-700 dark:text-gray-300">{t(`billing.features.${feat.key}`, { ...plan.vars, ...feat.vars })}</span>
             </li>
           {/each}
         </ul>

@@ -23,7 +23,7 @@ export async function deleteProduct(id: string) {
 
 export async function duplicateProduct(id: string) {
   const product = await getProduct(id)
-  const { name, description, price, images, category, inventory } = product
+  const { name, description, price, images, category, inventory, sku } = product
   return createProduct({
     name: `${name} (cópia)`,
     description,
@@ -31,6 +31,7 @@ export async function duplicateProduct(id: string) {
     images,
     category,
     inventory,
+    sku: sku ? `${sku}-copia` : null,
   })
 }
 

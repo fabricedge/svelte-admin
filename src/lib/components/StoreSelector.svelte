@@ -24,6 +24,11 @@
         <p class="truncate text-xs text-gray-500 dark:text-gray-400">
           {ctx.currentStore ? `/${ctx.currentStore.slug}` : ''}
         </p>
+        {#if ctx.currentStore?.domain}
+          <p class="truncate text-xs text-gray-400 dark:text-gray-500">
+            {ctx.currentStore.domain}
+          </p>
+        {/if}
         {#if ctx.isSuperAdmin}
           <span class="inline-block mt-0.5 rounded bg-purple-100 dark:bg-purple-900 px-1 py-0.5 text-[9px] font-medium text-purple-700 dark:text-purple-300 leading-none">{t('superadmin.badge')}</span>
         {/if}
@@ -48,6 +53,9 @@
             <div class="min-w-0 flex-1">
               <p class="truncate text-gray-900 dark:text-gray-100">{store.name}</p>
               <p class="truncate text-xs text-gray-500 dark:text-gray-400">{store.slug}</p>
+              {#if store.domain}
+                <p class="truncate text-xs text-gray-400 dark:text-gray-500">{store.domain}</p>
+              {/if}
             </div>
           </button>
         {/each}

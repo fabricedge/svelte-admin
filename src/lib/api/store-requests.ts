@@ -88,3 +88,7 @@ export async function forceActivate(id: string): Promise<{ success: boolean; sta
 export async function generatePaymentLink(id: string): Promise<{ paymentLink: string; paymentIntentId: string | null; paymentAmountCents: number }> {
   return post(`/store-requests/${id}/generate-payment-link`, {})
 }
+
+export async function checkDeployment(id: string): Promise<{ deploymentUrl: string; deploymentStatus: string }> {
+  return post(`/store-requests/${id}/check-deployment`)
+}

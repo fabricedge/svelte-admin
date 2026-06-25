@@ -10,6 +10,7 @@
 
   let name = $state('')
   let slug = $state('')
+  let sku = $state('')
   let description = $state('')
   let price = $state(0)
   let category = $state('')
@@ -27,6 +28,7 @@
       ])
       name = productData.name
       slug = productData.slug
+      sku = productData.sku || ''
       description = productData.description || ''
       price = productData.price / 100
       category = productData.category || ''
@@ -46,6 +48,7 @@
       await updateProduct(id, {
         name,
         slug,
+        sku: sku || null,
         description,
         price,
         category: category || null,
@@ -87,7 +90,7 @@
           <select bind:value={category} class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
             <option value="">{t('products.form.noCategory')}</option>
             {#each categories as cat}
-              <option value={cat}>{cat}</option>
+              <option value={cat.name}>{cat.name}</option>
             {/each}
           </select>
           <a href={`/admin/${page.params.slug}/categories`} class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50">+</a>
@@ -96,6 +99,10 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.inventory')}</label>
         <input type="number" bind:value={inventory} min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{t('products.form.sku')}</label>
+        <input type="text" bind:value={sku} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
       </div>
     </div>
 

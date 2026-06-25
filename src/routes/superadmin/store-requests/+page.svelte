@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getAllRequests, approveRequest, rejectRequest, getBillingStatus, refreshOnboardingLink, forceActivate, type StoreRequest } from '$lib/api/store-requests'
+  import { getAllRequests, approveRequest, rejectRequest, getBillingStatus, refreshOnboardingLink, forceActivate, checkDeployment, type StoreRequest } from '$lib/api/store-requests'
   import { toast } from 'svelte-sonner'
   import { t } from '$lib/i18n/locale.svelte'
 
@@ -370,7 +370,29 @@
                   </button>
                 </div>
               {:else if req.status === 'APPROVED' && req.store}
-                <a href="/superadmin/stores" class="text-xs text-blue-600 hover:underline">{t('storeRequests.viewStore')}</a>
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    onclick={async () => {
+                      processing = req.id
+                      try {
+                        const result = await checkDeployment(req.id)
+                        const store = requests.find(r => r.id === req.id)?.store
+                        if (store) store.deploymentStatus = result.deploymentStatus
+                        const key = result.deploymentStatus === 'READY' ? 'deployReady' : result.deploymentStatus === 'FAILED' ? 'deployFailed' : 'deployDeploying'
+                        toast.success(t(`storeRequests.${key}`))
+                      } catch (err: any) {
+                        toast.error(err.message)
+                      } finally {
+                        processing = null
+                      }
+                    }}
+                    disabled={processing === req.id}
+                    class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    {processing === req.id ? '...' : t('storeRequests.checkDeployment')}
+                  </button>
+                  <a href="/superadmin/stores" class="text-xs text-blue-600 hover:underline">{t('storeRequests.viewStore')}</a>
+                </div>
               {/if}
             </td>
           </tr>

@@ -8,6 +8,7 @@
   let newUrl = $state('')
   let uploading = $state(false)
   let uploadError = $state<string | null>(null)
+  let compress = $state(false)
 
   function getApiBase() {
     return PUBLIC_API_URL ? `${PUBLIC_API_URL}/api` : '/api'
@@ -37,9 +38,10 @@
     for (const file of files) {
       const formData = new FormData()
       formData.append('file', file)
+      const uploadUrl = `${getApiBase()}/upload${compress ? '?compress=true' : ''}`
 
       try {
-        const res = await fetch(`${getApiBase()}/upload`, {
+        const res = await fetch(uploadUrl, {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData,
@@ -127,6 +129,11 @@
       {t('common.noImages')}
     </div>
   {/if}
+
+  <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+    <input type="checkbox" bind:checked={compress} class="rounded border-gray-300 dark:border-gray-600" />
+    {t('common.imageCompression')}
+  </label>
 
   <div class="flex items-center gap-2">
     <label

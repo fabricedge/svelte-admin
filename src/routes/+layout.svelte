@@ -7,6 +7,7 @@
   import LanguageSwitcher from '$lib/i18n/LanguageSwitcher.svelte'
   import { StoreContext, setStoreContext } from '$lib/stores/store-context.svelte'
   import StoreSelector from '$lib/components/StoreSelector.svelte'
+  import RateLimitBanner from '$lib/components/RateLimitBanner.svelte'
 
   const storeCtx = new StoreContext()
   setStoreContext(storeCtx)
@@ -16,6 +17,22 @@
   {
     const hasExplicit = (() => { try { return ['pt','en','es'].includes(localStorage.getItem('locale') || '') } catch { return false } })()
     if (data?.locale && !hasExplicit) setLocale(data.locale as 'pt' | 'en' | 'es')
+  }
+
+  let rateLimitEnd = $state<number | null>(null)
+
+  {
+    try {
+      const stored = localStorage.getItem('rateLimitEnd')
+      if (stored) {
+        const end = parseInt(stored)
+        if (end > Date.now()) {
+          rateLimitEnd = end
+        } else {
+          localStorage.removeItem('rateLimitEnd')
+        }
+      }
+    } catch {}
   }
 
   let user = $state<{ email?: string; role?: string } | null>(null)
@@ -75,6 +92,10 @@
 </script>
 
 <Toaster />
+
+{#if rateLimitEnd}
+  <RateLimitBanner endTime={rateLimitEnd} />
+{/if}
 
 {#if user && page.url.pathname !== '/login' && !page.url.pathname.startsWith('/superadmin')}
   <div class="flex min-h-screen bg-gray-50 dark:bg-gray-950 dark:text-gray-100">

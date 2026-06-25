@@ -49,3 +49,17 @@ export async function updateBranding(id: string, branding: Branding) {
 export async function updateStoreDomain(id: string, domain: string) {
   return put(`/stores/${id}/domain`, { domain })
 }
+
+export interface MyUsage {
+  plan: 'FREE' | 'MONTHLY' | 'CUSTOM'
+  storeCount: number
+  limit: number | null
+}
+
+export async function getMyUsage(): Promise<MyUsage> {
+  return get('/stores/my-usage')
+}
+
+export async function checkDeployment(storeId: string): Promise<{ deploymentUrl: string; deploymentStatus: string }> {
+  return post(`/stores/${storeId}/check-deployment`)
+}
