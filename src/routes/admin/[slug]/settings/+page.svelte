@@ -36,7 +36,7 @@
 
   const generalKeys  = ['store_name','store_email','store_currency','store_locale','store_description','instagram_url','tiktok_url','facebook_url','store_timezone']
   const domainKeys   = ['store_domain']
-  const shippingKeys = ['easyship_api_token','easyship_client_id','easyship_client_secret','origin_zip','origin_city','origin_state','origin_country']
+  const shippingKeys = ['easyship_api_token','origin_zip','origin_city','origin_state','origin_country']
   const brandingKeys = ['branding_primary_color','branding_secondary_color','branding_logo_url','branding_favicon_url','branding_font_family']
 
   function currentSectionKeys(): string[] {
@@ -186,7 +186,6 @@
   }
 
   let showApiToken     = $state(false)
-  let showClientSecret = $state(false)
   let checkingShipping = $state(false)
   let shippingCheckResult = $state<{ status?: string; message?: string } | null>(null)
 
@@ -202,10 +201,7 @@
     return prefix + '...'
   }
 
-  let shippingConfigured = $derived(
-    !!settings['easyship_api_token'] ||
-    (!!settings['easyship_client_id'] && !!settings['easyship_client_secret'])
-  )
+  let shippingConfigured = $derived(!!settings['easyship_api_token'])
 
   function brandingVal(key: string, fallback: string): string {
     return settings[`branding_${key}`] || fallback
@@ -584,44 +580,6 @@
                   </button>
                 </div>
 
-                <div class="relative flex items-center gap-3 py-1">
-      <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
-      <span class="text-xs text-gray-400 shrink-0">t('common.or')</span>
-      <div class="flex-1 border-t border-gray-200 dark:border-gray-700"></div>
-    </div>
-
-                <div>
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('settings.fieldLabels.easyship_client_id')}</label>
-<input type="text" value={getValue('easyship_client_id')} oninput={(e) => setValue('easyship_client_id', inputVal(e))} placeholder="seu_client_id" class={inputCls} />
-  </div>
-                <div>
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('settings.fieldLabels.easyship_client_secret')}</label>
-<div class="relative">
-                    <input
-                      type={showClientSecret ? 'text' : 'password'}
-                      value={showClientSecret ? getValue('easyship_client_secret') : maskToken(getValue('easyship_client_secret'))}
-                      oninput={(e) => setValue('easyship_client_secret', inputVal(e))}
-                      placeholder="••••••••"
-                      class="{inputCls} pr-10"
-                    />
-                    <button
-                      onclick={async () => {
-                        if (!showClientSecret && getValue('easyship_client_secret') === '__SET__') {
-                          await revealKey('easyship_client_secret')
-                        }
-                        showClientSecret = !showClientSecret
-                      }}
-                      type="button"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      {#if showClientSecret}
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-    {:else}
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-    {/if}
-                    </button>
-                  </div>
-  </div>
               </div>
 
               <!-- Origin address -->
