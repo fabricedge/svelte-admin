@@ -189,7 +189,7 @@
       <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
         {#if usage.plan === 'FREE'}
           {t('storeRequests.storeLimitReached')}
-          <a href="/{page.params.slug}/billing" class="underline font-medium ml-1">{t('storeRequests.upgradeToMonthly')}</a>
+          <a href="/admin/{page.params.slug}/settings" class="underline font-medium ml-1">{t('storeRequests.upgradeToMonthly')}</a>
         {:else}
           {t('storeRequests.storeLimitReached')}
         {/if}

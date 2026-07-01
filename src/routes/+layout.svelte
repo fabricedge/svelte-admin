@@ -82,7 +82,6 @@
     { label: () => t('nav.products'), href: () => `/admin/${s}/products`, icon: '🏷️' },
     { label: () => t('nav.categories'), href: () => `/admin/${s}/categories`, icon: '📂' },
     { label: () => t('nav.stores'), href: () => `/admin/${s}/stores`, icon: '🏪' },
-    { label: () => t('nav.billing'), href: () => `/admin/${s}/billing`, icon: '💳' },
     { label: () => t('nav.customStorefront'), href: () => `/admin/${s}/custom-storefront`, icon: '🎨' },
     { label: () => t('nav.customers'), href: () => `/admin/${s}/customers`, icon: '👥' },
     { label: () => t('nav.settings'), href: () => `/admin/${s}/settings`, icon: '⚙️' },
