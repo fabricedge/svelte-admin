@@ -45,7 +45,7 @@
         images,
       })
       toast.success(t('products.created'))
-      window.location.href = '/admin/products'
+      window.location.href = `/admin/${page.params.slug}/products`
     } catch (err: any) {
       toast.error(err.message)
     } finally { loading = false }

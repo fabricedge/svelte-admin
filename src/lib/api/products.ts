@@ -36,7 +36,7 @@ export async function duplicateProduct(id: string) {
 }
 
 export async function listCategories() {
-  return get('/products/categories')
+  return get('/categories')
 }
 
 export async function deleteCategory(name: string) {
